@@ -36,5 +36,11 @@ npx jsr add @nshiab/journalism-geo
 bunx jsr add @nshiab/journalism-geo
 ```
 
+If you run your code in a browser, use the web entry point:
+
+```ts
+import { distance } from "@nshiab/journalism-geo/web";
+```
+
 If you wish to contribute, please check the
 [guidelines](https://github.com/nshiab/journalism-geo/blob/main/CONTRIBUTING.md).

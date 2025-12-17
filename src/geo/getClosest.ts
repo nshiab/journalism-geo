@@ -127,7 +127,10 @@ export default function getClosest<T>(
   },
 ): T & { distance: number };
 
-// Implementation signature (most general)
+/**
+ * Implementation signature for getClosest function.
+ * @ignore
+ */
 export default function getClosest<T>(
   lon: number,
   lat: number,

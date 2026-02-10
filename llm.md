@@ -425,7 +425,7 @@ async function getGeoTiffValues(
     bboxWidth: number;
     bboxHeight: number;
   },
-): Promise<number | TypedArray>;
+): Promise<TypedArray>;
 ```
 
 ### Parameters

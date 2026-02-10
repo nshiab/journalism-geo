@@ -4,7 +4,7 @@
     "jsr:@std/assert@*": "1.0.16",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "npm:d3-array@^3.2.4": "3.2.4",
-    "npm:geotiff@^2.1.4-beta.1": "2.1.4-beta.1"
+    "npm:geotiff@^3.0.2": "3.0.2"
   },
   "jsr": {
     "@std/assert@1.0.16": {
@@ -27,8 +27,8 @@
         "internmap"
       ]
     },
-    "geotiff@2.1.4-beta.1": {
-      "integrity": "sha512-3cW7V2XjnBWDJ8Gj/vCidvl3xiaN5c3az1Tfym9MBFq0LI3pi37YYWt9YxOjXF7njO135iKRGTJcbbsTiPdk2Q==",
+    "geotiff@3.0.2": {
+      "integrity": "sha512-KZ+0YK8gW9HWitovPhfHvkyd1gsyXtY9oOrS/OSX+12M8ojAm+NJ6Vl3tUjp7ZMcPO7e7pJoqpWoMdzO0rF8IQ==",
       "dependencies": [
         "@petamoriken/float16",
         "lerc",
@@ -61,14 +61,14 @@
     "xml-utils@1.10.2": {
       "integrity": "sha512-RqM+2o1RYs6T8+3DzDSoTRAUfrvaejbVHcp3+thnAtDKo8LskR+HomLajEy5UjTz24rpka7AxVBRR3g2wTUkJA=="
     },
-    "zstddec@0.2.0-alpha.3": {
-      "integrity": "sha512-uHyE3TN8jRFOaMVwdhERfrcaabyoUUawIRDKXE6x0nCU7mzyIZO0LndJ3AtVUiKLF0lC+8F5bMSySWEF586PSA=="
+    "zstddec@0.2.0": {
+      "integrity": "sha512-oyPnDa1X5c13+Y7mA/FDMNJrn4S8UNBe0KCqtDmor40Re7ALrPN6npFwyYVRRh+PqozZQdeg23QtbcamZnG5rA=="
     }
   },
   "workspace": {
     "dependencies": [
       "npm:d3-array@^3.2.4",
-      "npm:geotiff@^2.1.4-beta.1"
+      "npm:geotiff@^3.0.2"
     ]
   }
 }

@@ -30,7 +30,7 @@ export default async function getGeoTiffValues(
     bboxWidth: number;
     bboxHeight: number;
   },
-): Promise<number | TypedArray> {
+): Promise<TypedArray> {
   const { image, bbox, pixelWidth, pixelHeight, bboxWidth, bboxHeight } =
     geoTiffDetails;
 

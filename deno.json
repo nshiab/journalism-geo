@@ -24,7 +24,7 @@
   "nodeModulesDir": "auto",
   "imports": {
     "d3-array": "npm:d3-array@^3.2.4",
-    "geotiff": "npm:geotiff@^2.1.4-beta.1"
+    "geotiff": "npm:geotiff@^3.0.2"
   },
   "fmt": {
     "exclude": [

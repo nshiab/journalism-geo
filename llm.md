@@ -316,12 +316,12 @@ function getClosest<T extends { properties: unknown }>(
 
 ### Parameters
 
-- **`lon`**: - The longitude of the reference point.
-- **`lat`**: - The latitude of the reference point.
-- **`geoItems`**: - An array of geographical items with properties objects.
-- **`getItemLon`**: - A function that returns longitude from an item.
-- **`getItemLat`**: - A function that returns latitude from an item.
-- **`options`**: - Settings with addDistance: true for items with properties.
+- **`lon`**: The longitude of the reference point.
+- **`lat`**: The latitude of the reference point.
+- **`geoItems`**: An array of geographical items with properties objects.
+- **`getItemLon`**: A function that returns longitude from an item.
+- **`getItemLat`**: A function that returns latitude from an item.
+- **`options`**: Settings with addDistance: true for items with properties.
 
 ### Returns
 
@@ -347,12 +347,12 @@ function getClosest<T>(
 
 ### Parameters
 
-- **`lon`**: - The longitude of the reference point.
-- **`lat`**: - The latitude of the reference point.
-- **`geoItems`**: - An array of geographical items without properties objects.
-- **`getItemLon`**: - A function that returns longitude from an item.
-- **`getItemLat`**: - A function that returns latitude from an item.
-- **`options`**: - Settings with addDistance: true for items without properties.
+- **`lon`**: The longitude of the reference point.
+- **`lat`**: The latitude of the reference point.
+- **`geoItems`**: An array of geographical items without properties objects.
+- **`getItemLon`**: A function that returns longitude from an item.
+- **`getItemLat`**: A function that returns latitude from an item.
+- **`options`**: Settings with addDistance: true for items without properties.
 
 ### Returns
 
@@ -370,7 +370,7 @@ async function getGeoTiffDetails(
   path: string,
 ): Promise<
   {
-    image: GeoTIFFImage;
+    image: any;
     bbox: number[];
     pixelWidth: number;
     pixelHeight: number;
@@ -382,7 +382,7 @@ async function getGeoTiffDetails(
 
 ### Parameters
 
-- **`path`**: - The absolute path to the GeoTIFF file.
+- **`path`**: The absolute path to the GeoTIFF file.
 
 ### Returns
 
@@ -418,21 +418,30 @@ async function getGeoTiffValues(
   lat: number,
   lon: number,
   geoTiffDetails: {
-    image: GeoTIFFImage;
+    image: unknown;
     bbox: number[];
     pixelWidth: number;
     pixelHeight: number;
     bboxWidth: number;
     bboxHeight: number;
   },
-): Promise<TypedArray>;
+): Promise<
+  | Uint8Array
+  | Int8Array
+  | Uint16Array
+  | Int16Array
+  | Uint32Array
+  | Int32Array
+  | Float32Array
+  | Float64Array
+>;
 ```
 
 ### Parameters
 
-- **`lat`**: - The latitude coordinate for which to extract the value.
-- **`lon`**: - The longitude coordinate for which to extract the value.
-- **`geoTiffDetails`**: - An object containing the GeoTIFF image details,
+- **`lat`**: The latitude coordinate for which to extract the value.
+- **`lon`**: The longitude coordinate for which to extract the value.
+- **`geoTiffDetails`**: An object containing the GeoTIFF image details,
   typically obtained from `getGeoTiffDetails`.
 
 ### Returns
@@ -478,9 +487,9 @@ function styledLayerDescriptor(
 
 ### Parameters
 
-- **`layer`**: - The name of the WMS layer to which this SLD will be applied
+- **`layer`**: The name of the WMS layer to which this SLD will be applied
   (e.g., `"GDPS.ETA_TT"`).
-- **`colorScale`**: - An array of objects, where each object defines a `color`
+- **`colorScale`**: An array of objects, where each object defines a `color`
   (hex code) and a `value` (the data threshold for that color). The function
   will sort these entries by value in ascending order to create a proper color
   gradient.

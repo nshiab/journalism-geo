@@ -5,7 +5,6 @@ Deno.test("should return the detailed information from a geoTiff", {
   sanitizeResources: false,
 }, async () => {
   const geoTiffDetails = await getGeoTiffDetails("test/data/MAT.tif");
-  // @ts-expect-error it's okay
   delete geoTiffDetails.image;
   assertEquals(
     geoTiffDetails as {

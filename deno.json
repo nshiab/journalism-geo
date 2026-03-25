@@ -1,6 +1,6 @@
 {
   "name": "@nshiab/journalism-geo",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "exports": {
     ".": "./src/index.ts",
     "./web": "./src/web.ts"
@@ -24,7 +24,7 @@
   "nodeModulesDir": "auto",
   "imports": {
     "d3-array": "npm:d3-array@^3.2.4",
-    "geotiff": "npm:geotiff@^3.0.2"
+    "geotiff": "npm:geotiff@^3.0.5"
   },
   "fmt": {
     "exclude": [

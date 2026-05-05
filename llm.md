@@ -18,6 +18,12 @@ To import a function, use:
 import { functionName } from "@nshiab/journalism-geo";
 ```
 
+To import a function from the web entry point, use:
+
+```ts
+import { functionName } from "@nshiab/journalism-geo/web";
+```
+
 ## distance
 
 Calculates the Haversine distance between two geographical points (longitude and

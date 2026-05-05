@@ -17,6 +17,11 @@
  * ```ts
  * import { functionName } from "@nshiab/journalism-geo";
  * ```
+ *
+ * To import a function from the web entry point, use:
+ * ```ts
+ * import { functionName } from "@nshiab/journalism-geo/web";
+ * ```
  */
 
 import geoTo3D from "./geo/geoTo3D.ts";

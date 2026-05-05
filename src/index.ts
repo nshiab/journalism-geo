@@ -10,7 +10,7 @@
  *
  * To install the library with Node.js, use:
  * ```bash
- * npx jsr add @nshiab/journalism-geo
+ * npm i @nshiab/journalism-geo
  * ```
  *
  * To import a function, use:

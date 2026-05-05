@@ -9,7 +9,7 @@ deno add jsr:@nshiab/journalism-geo
 To install the library with Node.js, use:
 
 ```bash
-npx jsr add @nshiab/journalism-geo
+npm i @nshiab/journalism-geo
 ```
 
 To import a function, use:
@@ -88,65 +88,6 @@ function geoTo3D(
   radius: number,
   options: { decimals?: number; toArray: true },
 ): [number, number, number];
-```
-
-### Parameters
-
-- **`lon`**: The longitude of the geographical point, in degrees.
-- **`lat`**: The latitude of the geographical point, in degrees.
-- **`radius`**: The radius of the sphere on which to project the coordinates.
-- **`options`**: Optional settings for the conversion.
-- **`options.decimals`**: The number of decimal places to round the x, y, and z
-  coordinates to. If not specified, no rounding is applied.
-- **`options.toArray`**: If `true`, the function will return the coordinates as
-  an array `[x, y, z]` instead of an object `{ x, y, z }`. Defaults to `false`.
-
-### Returns
-
-An object `{ x, y, z }` or an array `[x, y, z]` representing the 3D Cartesian
-coordinates.
-
-### Examples
-
-```ts
-// Basic usage: Convert geographical coordinates to 3D object coordinates.
-// Longitude: -73.5674 (Montreal), Latitude: 45.5019 (Montreal), Radius: 1
-const coordsObject = geoTo3D(-73.5674, 45.5019, 1, { decimals: 2 });
-console.log(coordsObject); // Expected output: { x: -0.67, y: 0.71, z: 0.2 }
-```
-
-```ts
-// Convert geographical coordinates to 3D array coordinates.
-const coordsArray = geoTo3D(-73.5674, 45.5019, 1, {
-  decimals: 2,
-  toArray: true,
-});
-console.log(coordsArray); // Expected output: [-0.67, 0.71, 0.2]
-```
-
-```ts
-// Using a larger radius for visualization purposes.
-const earthCoords = geoTo3D(0, 0, 6371, { decimals: 0 }); // Earth's approximate radius in km
-console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 lat/lon)
-```
-
-## geoTo3D
-
-Converts geographical coordinates (longitude and latitude) into 3D Cartesian (x,
-y, z) coordinates based on a specified radius.
-
-The conversion assumes a spherical Earth model. The `radius` parameter
-determines the size of the sphere on which the points are projected.
-
-### Signature
-
-```typescript
-function geoTo3D(
-  lon: number,
-  lat: number,
-  radius: number,
-  options?: { decimals?: number; toArray?: false },
-): { x: number; y: number; z: number };
 ```
 
 ### Parameters
@@ -295,68 +236,6 @@ const closestPark = getClosest(
 console.log(closestPark);
 // Expected output: { type: "Feature", properties: { name: "Park B", distance: ... }, geometry: { ... } }
 ```
-
-## getClosest
-
-Finds the geographical item closest to a given reference point and adds distance
-to the properties object.
-
-### Signature
-
-```typescript
-function getClosest<T extends { properties: unknown }>(
-  lon: number,
-  lat: number,
-  geoItems: T[],
-  getItemLon: (item: T) => number,
-  getItemLat: (item: T) => number,
-  options: { addDistance: true; decimals?: number },
-): T & { properties: T["properties"] & { distance: number } };
-```
-
-### Parameters
-
-- **`lon`**: The longitude of the reference point.
-- **`lat`**: The latitude of the reference point.
-- **`geoItems`**: An array of geographical items with properties objects.
-- **`getItemLon`**: A function that returns longitude from an item.
-- **`getItemLat`**: A function that returns latitude from an item.
-- **`options`**: Settings with addDistance: true for items with properties.
-
-### Returns
-
-The closest item with distance added to its properties object.
-
-## getClosest
-
-Finds the geographical item closest to a given reference point and adds distance
-directly to the item.
-
-### Signature
-
-```typescript
-function getClosest<T>(
-  lon: number,
-  lat: number,
-  geoItems: T[],
-  getItemLon: (item: T) => number,
-  getItemLat: (item: T) => number,
-  options: { addDistance: true; decimals?: number },
-): T & { distance: number };
-```
-
-### Parameters
-
-- **`lon`**: The longitude of the reference point.
-- **`lat`**: The latitude of the reference point.
-- **`geoItems`**: An array of geographical items without properties objects.
-- **`getItemLon`**: A function that returns longitude from an item.
-- **`getItemLat`**: A function that returns latitude from an item.
-- **`options`**: Settings with addDistance: true for items without properties.
-
-### Returns
-
-The closest item with distance added directly to the item.
 
 ## getGeoTiffDetails
 

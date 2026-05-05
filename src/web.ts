@@ -1,7 +1,17 @@
 /**
  * @module
  *
- * This module provides a collection of functions to be used in web applications.
+ * The Journalism library (geospatial functions) - Web entry point
+ *
+ * To install the library with Deno, use:
+ * ```bash
+ * deno add jsr:@nshiab/journalism-geo
+ * ```
+ *
+ * To install the library with Node.js, use:
+ * ```bash
+ * npm i @nshiab/journalism-geo
+ * ```
  *
  * To import a function, use:
  * ```ts

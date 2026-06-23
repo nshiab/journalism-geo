@@ -88,3 +88,15 @@ Deno.test("should require fitTo for flat projections", async () => {
     "options.fitTo",
   );
 });
+
+Deno.test("should throw when a flat projection cannot project the coordinate", async () => {
+  await assertRejects(
+    () =>
+      geoToBlenderPoint(-1, -1, "albersUsa", {
+        fitTo: square,
+        scale: 10,
+      }),
+    Error,
+    "could not project coordinate [-1, -1]",
+  );
+});

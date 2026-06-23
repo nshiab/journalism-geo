@@ -63,7 +63,7 @@ async function getFitToGeoJson(
  * @param lat - The latitude of the geographical point, in degrees.
  * @param projection - The projection to use. Supports d3-geo conic and cylindrical projection names, plus `"orthographic"` for a 3D globe point.
  * @param options - Optional settings for scale, coordinate rounding, projection fitting, and return shape.
- * @returns A Promise that resolves to Blender coordinates, or `null` when a flat projection cannot project the coordinate.
+ * @returns A Promise that resolves to Blender coordinates.
  *
  * @example
  * ```ts
@@ -117,7 +117,7 @@ export default async function geoToBlenderPoint(
      */
     toArray: true;
   },
-): Promise<[number, number, number] | null>;
+): Promise<[number, number, number]>;
 
 /**
  * Converts one longitude/latitude coordinate into Blender coordinates.
@@ -129,7 +129,7 @@ export default async function geoToBlenderPoint(
  * @param lat - The latitude of the geographical point, in degrees.
  * @param projection - The projection to use. Supports d3-geo conic and cylindrical projection names, plus `"orthographic"` for a 3D globe point.
  * @param options - Optional settings for scale, coordinate rounding, projection fitting, and return shape.
- * @returns A Promise that resolves to Blender coordinates, or `null` when a flat projection cannot project the coordinate.
+ * @returns A Promise that resolves to Blender coordinates.
  *
  * @example
  * ```ts
@@ -182,7 +182,7 @@ export default async function geoToBlenderPoint(
      */
     toArray?: false;
   },
-): Promise<{ x: number; y: number; z: number } | null>;
+): Promise<{ x: number; y: number; z: number }>;
 
 /**
  * Implementation signature for geoToBlenderPoint function.
@@ -205,7 +205,7 @@ export default async function geoToBlenderPoint(
     | "transverseMercator",
   options: GeoToBlenderPointOptions = {},
 ): Promise<
-  { x: number; y: number; z: number } | [number, number, number] | null
+  { x: number; y: number; z: number } | [number, number, number]
 > {
   const scale = options.scale ?? 10;
 
@@ -232,7 +232,13 @@ export default async function geoToBlenderPoint(
   );
   const point = projectFlatCoordinate(d3Projection, lon, lat, options.decimals);
 
-  if (point === null || options.toArray) {
+  if (point === null) {
+    throw new Error(
+      `Projection ${projection} could not project coordinate [${lon}, ${lat}].`,
+    );
+  }
+
+  if (options.toArray) {
     return point;
   }
 

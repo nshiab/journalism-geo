@@ -241,8 +241,7 @@ async function geoToBlenderPoint(
 
 ### Returns
 
-A Promise that resolves to Blender coordinates. It rejects when a flat
-projection cannot project the coordinate.
+A Promise that resolves to Blender coordinates.
 
 ### Examples
 

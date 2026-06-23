@@ -25,15 +25,22 @@
  */
 
 import geoTo3D from "./geo/geoTo3D.ts";
+import geoToBlender from "./geo/geoToBlender.ts";
 import distance from "./geo/distance.ts";
 import styledLayerDescriptor from "./geo/styledLayerDescriptor.ts";
 import getClosest from "./geo/getClosest.ts";
 import getGeoTiffDetails from "./geo/getGeoTiffDetails.ts";
 import getGeoTiffValues from "./geo/getGeoTiffValues.ts";
 
+export type {
+  GeoToBlenderOptions,
+  GeoToBlenderProjection,
+} from "./geo/geoToBlender.ts";
+
 export {
   distance,
   geoTo3D,
+  geoToBlender,
   getClosest,
   getGeoTiffDetails,
   getGeoTiffValues,

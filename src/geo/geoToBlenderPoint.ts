@@ -49,7 +49,7 @@ function getFitToGeoJson(fitTo: object | undefined): GeoJsonObject {
 /**
  * Converts one longitude/latitude coordinate into Blender coordinates.
  *
- * Flat projections are fitted to `options.fitTo` and placed on Blender's X/Z plane with Y up.
+ * Flat projections are fitted to `options.fitTo` and placed on Blender's X/Y plane with Z up.
  * The `"orthographic"` projection exports the coordinate in 3D on a sphere using `geoTo3D`.
  *
  * @param lon - The longitude of the geographical point, in degrees.
@@ -115,7 +115,7 @@ export default function geoToBlenderPoint(
 /**
  * Converts one longitude/latitude coordinate into Blender coordinates.
  *
- * Flat projections are fitted to `options.fitTo` and placed on Blender's X/Z plane with Y up.
+ * Flat projections are fitted to `options.fitTo` and placed on Blender's X/Y plane with Z up.
  * The `"orthographic"` projection exports the coordinate in 3D on a sphere using `geoTo3D`.
  *
  * @param lon - The longitude of the geographical point, in degrees.

@@ -87,7 +87,7 @@ async function writeGeoJson(
   return path;
 }
 
-function vertexRange(obj: string, axis: 0 | 2): number {
+function vertexRange(obj: string, axis: 0 | 1 | 2): number {
   let min = Infinity;
   let max = -Infinity;
 
@@ -126,7 +126,7 @@ for (const projection of flatProjections) {
     assertStringIncludes(obj, "o borders\n");
     assertStringIncludes(obj, "l 1 2 3 4 5\n");
     assert(
-      Math.max(vertexRange(obj, 0), vertexRange(obj, 2)) > 5,
+      Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
     );
   });
 }
@@ -192,7 +192,7 @@ Deno.test("should rotate flat projections when requested", async () => {
   const rotated = await Deno.readTextFile(rotatedPath);
 
   assert(unrotated !== rotated);
-  assertStringIncludes(rotated, "v 5 0 2.545\n");
+  assertStringIncludes(rotated, "v 5 2.545 0\n");
 });
 
 Deno.test("should write Canadian provinces and territories to an OBJ file", async () => {
@@ -211,7 +211,7 @@ Deno.test("should write Canadian provinces and territories to an OBJ file", asyn
   assert(countObjRecords(obj, "v") > 1000);
   assert(countObjRecords(obj, "l") > 100);
   assert(
-    Math.max(vertexRange(obj, 0), vertexRange(obj, 2)) > 5,
+    Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
   );
 });
 
@@ -238,7 +238,7 @@ Deno.test("should write Canadian provinces and territories to a conic conformal 
   assert(countObjRecords(obj, "v") > 1000);
   assert(countObjRecords(obj, "l") > 100);
   assert(
-    Math.max(vertexRange(obj, 0), vertexRange(obj, 2)) > 5,
+    Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
   );
 });
 

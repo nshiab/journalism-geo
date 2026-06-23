@@ -151,9 +151,25 @@ projection exports borders in 3D on a sphere using `geoTo3D`. Set
 ```typescript
 async function geoToBlender(
   geojsonPath: string,
-  projection: GeoToBlenderProjection,
+  projection:
+    | "albers"
+    | "albersUsa"
+    | "conicConformal"
+    | "conicEqualArea"
+    | "conicEquidistant"
+    | "equirectangular"
+    | "equalEarth"
+    | "mercator"
+    | "naturalEarth1"
+    | "orthographic"
+    | "transverseMercator",
   outputPath: string,
-  options?: GeoToBlenderOptions,
+  options?: {
+    scale?: number;
+    decimals?: number;
+    rotate?: [number, number] | [number, number, number];
+    maxSegmentLength?: number;
+  },
 ): Promise<string>;
 ```
 

@@ -253,9 +253,25 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  */
 export default async function geoToBlender(
   geojsonPath: string,
-  projection: GeoToBlenderProjection,
+  projection:
+    | "albers"
+    | "albersUsa"
+    | "conicConformal"
+    | "conicEqualArea"
+    | "conicEquidistant"
+    | "equirectangular"
+    | "equalEarth"
+    | "mercator"
+    | "naturalEarth1"
+    | "orthographic"
+    | "transverseMercator",
   outputPath: string,
-  options: GeoToBlenderOptions = {},
+  options: {
+    scale?: number;
+    decimals?: number;
+    rotate?: [number, number] | [number, number, number];
+    maxSegmentLength?: number;
+  } = {},
 ): Promise<string> {
   const scale = options.scale ?? 10;
   const geojson = JSON.parse(

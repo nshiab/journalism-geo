@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import geoTo3D from "./geoTo3D.ts";
 import {
   fitProjection,
@@ -29,7 +28,7 @@ export type GeoToBlenderPointOptions = {
    * GeoJSON used to fit flat projections before projecting the coordinate.
    * Required for every projection except `"orthographic"`.
    */
-  fitTo?: string | object;
+  fitTo?: object;
   /**
    * If `true`, the function returns `[x, y, z]` instead of `{ x, y, z }`.
    * @default false
@@ -37,13 +36,7 @@ export type GeoToBlenderPointOptions = {
   toArray?: boolean;
 };
 
-async function getFitToGeoJson(
-  fitTo: string | object | undefined,
-): Promise<GeoJsonObject> {
-  if (typeof fitTo === "string") {
-    return JSON.parse(await readFile(fitTo, "utf8")) as GeoJsonObject;
-  }
-
+function getFitToGeoJson(fitTo: object | undefined): GeoJsonObject {
   if (fitTo) {
     return fitTo as GeoJsonObject;
   }
@@ -63,19 +56,19 @@ async function getFitToGeoJson(
  * @param lat - The latitude of the geographical point, in degrees.
  * @param projection - The projection to use. Supports d3-geo conic and cylindrical projection names, plus `"orthographic"` for a 3D globe point.
  * @param options - Optional settings for scale, coordinate rounding, projection fitting, and return shape.
- * @returns A Promise that resolves to Blender coordinates.
+ * @returns Blender coordinates.
  *
  * @example
  * ```ts
- * const point = await geoToBlenderPoint(-73.5674, 45.5019, "mercator", {
- *   fitTo: "./data/canada.geojson",
+ * const point = geoToBlenderPoint(-73.5674, 45.5019, "mercator", {
+ *   fitTo: canadaGeoJson,
  *   scale: 10,
  *   decimals: 3,
  * });
  * ```
  * @category Geo
  */
-export default async function geoToBlenderPoint(
+export default function geoToBlenderPoint(
   lon: number,
   lat: number,
   projection:
@@ -110,14 +103,14 @@ export default async function geoToBlenderPoint(
      * GeoJSON used to fit flat projections before projecting the coordinate.
      * Required for every projection except `"orthographic"`.
      */
-    fitTo?: string | object;
+    fitTo?: object;
     /**
      * If `true`, the function returns `[x, y, z]` instead of `{ x, y, z }`.
      * @default false
      */
     toArray: true;
   },
-): Promise<[number, number, number]>;
+): [number, number, number];
 
 /**
  * Converts one longitude/latitude coordinate into Blender coordinates.
@@ -129,18 +122,18 @@ export default async function geoToBlenderPoint(
  * @param lat - The latitude of the geographical point, in degrees.
  * @param projection - The projection to use. Supports d3-geo conic and cylindrical projection names, plus `"orthographic"` for a 3D globe point.
  * @param options - Optional settings for scale, coordinate rounding, projection fitting, and return shape.
- * @returns A Promise that resolves to Blender coordinates.
+ * @returns Blender coordinates.
  *
  * @example
  * ```ts
- * const point = await geoToBlenderPoint(-73.5674, 45.5019, "orthographic", {
+ * const point = geoToBlenderPoint(-73.5674, 45.5019, "orthographic", {
  *   scale: 10,
  *   decimals: 3,
  * });
  * ```
  * @category Geo
  */
-export default async function geoToBlenderPoint(
+export default function geoToBlenderPoint(
   lon: number,
   lat: number,
   projection:
@@ -175,20 +168,20 @@ export default async function geoToBlenderPoint(
      * GeoJSON used to fit flat projections before projecting the coordinate.
      * Required for every projection except `"orthographic"`.
      */
-    fitTo?: string | object;
+    fitTo?: object;
     /**
      * If `true`, the function returns `[x, y, z]` instead of `{ x, y, z }`.
      * @default false
      */
     toArray?: false;
   },
-): Promise<{ x: number; y: number; z: number }>;
+): { x: number; y: number; z: number };
 
 /**
  * Implementation signature for geoToBlenderPoint function.
  * @ignore
  */
-export default async function geoToBlenderPoint(
+export default function geoToBlenderPoint(
   lon: number,
   lat: number,
   projection:
@@ -204,9 +197,7 @@ export default async function geoToBlenderPoint(
     | "orthographic"
     | "transverseMercator",
   options: GeoToBlenderPointOptions = {},
-): Promise<
-  { x: number; y: number; z: number } | [number, number, number]
-> {
+): { x: number; y: number; z: number } | [number, number, number] {
   const scale = options.scale ?? 10;
 
   if (projection === "orthographic") {
@@ -223,7 +214,7 @@ export default async function geoToBlenderPoint(
     return { x, y, z };
   }
 
-  const fitToGeoJson = await getFitToGeoJson(options.fitTo);
+  const fitToGeoJson = getFitToGeoJson(options.fitTo);
   const d3Projection = fitProjection(
     projection,
     linesToGeoJson(getLines(fitToGeoJson)),

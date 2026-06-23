@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert";
+import { assertEquals, assertThrows } from "jsr:@std/assert";
 import geoToBlender from "../../src/geo/geoToBlender.ts";
 import geoToBlenderPoint from "../../src/geo/geoToBlenderPoint.ts";
 
@@ -42,8 +42,8 @@ function firstVertex(obj: string): [number, number, number] {
   return [Number(x), Number(y), Number(z)];
 }
 
-Deno.test("should convert orthographic coordinates to a Blender point", async () => {
-  const point = await geoToBlenderPoint(-1, -1, "orthographic", {
+Deno.test("should convert orthographic coordinates to a Blender point", () => {
+  const point = geoToBlenderPoint(-1, -1, "orthographic", {
     scale: 1,
     decimals: 3,
   });
@@ -51,8 +51,8 @@ Deno.test("should convert orthographic coordinates to a Blender point", async ()
   assertEquals(point, { x: -0.017, y: -0.017, z: 1 });
 });
 
-Deno.test("should return a Blender point as an array", async () => {
-  const point = await geoToBlenderPoint(-1, -1, "orthographic", {
+Deno.test("should return a Blender point as an array", () => {
+  const point = geoToBlenderPoint(-1, -1, "orthographic", {
     scale: 1,
     decimals: 3,
     toArray: true,
@@ -71,8 +71,8 @@ Deno.test("should fit flat projections to GeoJSON before converting coordinates"
   });
 
   const obj = await Deno.readTextFile(outputPath);
-  const point = await geoToBlenderPoint(-1, -1, "mercator", {
-    fitTo: geojsonPath,
+  const point = geoToBlenderPoint(-1, -1, "mercator", {
+    fitTo: square,
     scale: 10,
     decimals: 3,
     toArray: true,
@@ -81,16 +81,16 @@ Deno.test("should fit flat projections to GeoJSON before converting coordinates"
   assertEquals(point, firstVertex(obj));
 });
 
-Deno.test("should require fitTo for flat projections", async () => {
-  await assertRejects(
+Deno.test("should require fitTo for flat projections", () => {
+  assertThrows(
     () => geoToBlenderPoint(-1, -1, "mercator"),
     Error,
     "options.fitTo",
   );
 });
 
-Deno.test("should throw when a flat projection cannot project the coordinate", async () => {
-  await assertRejects(
+Deno.test("should throw when a flat projection cannot project the coordinate", () => {
+  assertThrows(
     () =>
       geoToBlenderPoint(-1, -1, "albersUsa", {
         fitTo: square,

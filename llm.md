@@ -205,7 +205,7 @@ sphere using `geoTo3D`.
 ### Signature
 
 ```typescript
-async function geoToBlenderPoint(
+function geoToBlenderPoint(
   lon: number,
   lat: number,
   projection:
@@ -224,10 +224,10 @@ async function geoToBlenderPoint(
     scale?: number;
     decimals?: number;
     rotate?: [number, number] | [number, number, number];
-    fitTo?: string | object;
+    fitTo?: object;
     toArray: true;
   },
-): Promise<[number, number, number]>;
+): [number, number, number];
 ```
 
 ### Parameters
@@ -241,13 +241,13 @@ async function geoToBlenderPoint(
 
 ### Returns
 
-A Promise that resolves to Blender coordinates.
+Blender coordinates.
 
 ### Examples
 
 ```ts
-const point = await geoToBlenderPoint(-73.5674, 45.5019, "mercator", {
-  fitTo: "./data/canada.geojson",
+const point = geoToBlenderPoint(-73.5674, 45.5019, "mercator", {
+  fitTo: canadaGeoJson,
   scale: 10,
   decimals: 3,
 });

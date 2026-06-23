@@ -1,65 +1,21 @@
-import {
-  geoAlbers,
-  geoAlbersUsa,
-  geoConicConformal,
-  geoConicEqualArea,
-  geoConicEquidistant,
-  geoDistance,
-  geoEqualEarth,
-  geoEquirectangular,
-  geoInterpolate,
-  geoMercator,
-  geoNaturalEarth1,
-  geoTransverseMercator,
-} from "d3-geo";
+import { geoDistance, geoInterpolate } from "d3-geo";
+import { readFile, writeFile } from "node:fs/promises";
 import geoTo3D from "./geoTo3D.ts";
-
-type Position = [number, number] | [number, number, number];
-
-type GeoJsonGeometry =
-  | { type: "Point"; coordinates: Position }
-  | { type: "MultiPoint"; coordinates: Position[] }
-  | { type: "LineString"; coordinates: Position[] }
-  | { type: "MultiLineString"; coordinates: Position[][] }
-  | { type: "Polygon"; coordinates: Position[][] }
-  | { type: "MultiPolygon"; coordinates: Position[][][] }
-  | { type: "GeometryCollection"; geometries: GeoJsonGeometry[] };
-
-type GeoJsonObject =
-  | GeoJsonGeometry
-  | { type: "Feature"; geometry: GeoJsonGeometry | null }
-  | {
-    type: "FeatureCollection";
-    features: { geometry: GeoJsonGeometry | null }[];
-  };
-
-type FlatProjection = {
-  fitExtent: (
-    extent: [[number, number], [number, number]],
-    object: GeoJsonObject,
-  ) => FlatProjection;
-  rotate: (angles: GeoToBlenderRotate) => FlatProjection;
-  (coordinates: [number, number]): [number, number] | null;
-};
+import {
+  fitProjection,
+  type GeoJsonObject,
+  getLines,
+  linesToGeoJson,
+  type Position,
+  projectFlatCoordinate,
+  roundValue,
+} from "./helpers/geoToBlender.ts";
 
 /** Rotation angles for flat d3-geo projections, in degrees. */
-export type GeoToBlenderRotate =
-  | [number, number]
-  | [number, number, number];
+export type { GeoToBlenderRotate } from "./helpers/geoToBlender.ts";
 
 /** The supported projection names for `geoToBlender`. */
-export type GeoToBlenderProjection =
-  | "albers"
-  | "albersUsa"
-  | "conicConformal"
-  | "conicEqualArea"
-  | "conicEquidistant"
-  | "equirectangular"
-  | "equalEarth"
-  | "mercator"
-  | "naturalEarth1"
-  | "orthographic"
-  | "transverseMercator";
+export type { GeoToBlenderProjection } from "./helpers/geoToBlender.ts";
 
 /** Options for converting GeoJSON borders into a Blender OBJ file. */
 export type GeoToBlenderOptions = {
@@ -77,100 +33,13 @@ export type GeoToBlenderOptions = {
    * Rotation angles for flat d3-geo projections, in degrees.
    * These values are passed to the projection's `rotate` method before fitting.
    */
-  rotate?: GeoToBlenderRotate;
+  rotate?: [number, number] | [number, number, number];
   /**
    * The maximum angular distance, in degrees, between generated vertices for `"orthographic"`.
    * By default, segments are not densified.
    */
   maxSegmentLength?: number;
 };
-
-function getProjection(
-  projection: Exclude<GeoToBlenderProjection, "orthographic">,
-) {
-  if (projection === "albers") {
-    return geoAlbers() as FlatProjection;
-  }
-
-  if (projection === "albersUsa") {
-    return geoAlbersUsa() as FlatProjection;
-  }
-
-  if (projection === "conicConformal") {
-    return geoConicConformal() as FlatProjection;
-  }
-
-  if (projection === "conicEqualArea") {
-    return geoConicEqualArea() as FlatProjection;
-  }
-
-  if (projection === "conicEquidistant") {
-    return geoConicEquidistant() as FlatProjection;
-  }
-
-  if (projection === "mercator") {
-    return geoMercator() as FlatProjection;
-  }
-
-  if (projection === "equalEarth") {
-    return geoEqualEarth() as FlatProjection;
-  }
-
-  if (projection === "equirectangular") {
-    return geoEquirectangular() as FlatProjection;
-  }
-
-  if (projection === "transverseMercator") {
-    return geoTransverseMercator() as FlatProjection;
-  }
-
-  return geoNaturalEarth1() as FlatProjection;
-}
-
-function getLines(geojson: GeoJsonObject): Position[][] {
-  if (geojson.type === "FeatureCollection") {
-    return geojson.features.flatMap((feature) =>
-      feature.geometry ? getLines(feature.geometry) : []
-    );
-  }
-
-  if (geojson.type === "Feature") {
-    return geojson.geometry ? getLines(geojson.geometry) : [];
-  }
-
-  if (geojson.type === "LineString") {
-    return [geojson.coordinates];
-  }
-
-  if (geojson.type === "MultiLineString" || geojson.type === "Polygon") {
-    return geojson.coordinates;
-  }
-
-  if (geojson.type === "MultiPolygon") {
-    return geojson.coordinates.flat();
-  }
-
-  if (geojson.type === "GeometryCollection") {
-    return geojson.geometries.flatMap((geometry) => getLines(geometry));
-  }
-
-  return [];
-}
-
-function linesToGeoJson(lines: Position[][]): GeoJsonGeometry {
-  return {
-    type: "MultiLineString",
-    coordinates: lines,
-  };
-}
-
-function roundValue(value: number, decimals?: number): number {
-  if (typeof decimals === "number") {
-    return parseFloat(value.toFixed(decimals));
-  }
-
-  return value;
-}
 
 function vertexLine(
   x: number,
@@ -267,15 +136,31 @@ export default async function geoToBlender(
     | "transverseMercator",
   outputPath: string,
   options: {
+    /**
+     * For flat projections, the width and height of the fitted projection extent in Blender units.
+     * For `"orthographic"`, the radius of the sphere in Blender units.
+     * @default 10
+     */
     scale?: number;
+    /**
+     * The number of decimal places to round OBJ coordinates to.
+     */
     decimals?: number;
+    /**
+     * Rotation angles for flat d3-geo projections, in degrees.
+     * These values are passed to the projection's `rotate` method before fitting.
+     */
     rotate?: [number, number] | [number, number, number];
+    /**
+     * The maximum angular distance, in degrees, between generated vertices for `"orthographic"`.
+     * By default, segments are not densified.
+     */
     maxSegmentLength?: number;
   } = {},
 ): Promise<string> {
   const scale = options.scale ?? 10;
   const geojson = JSON.parse(
-    await Deno.readTextFile(geojsonPath),
+    await readFile(geojsonPath, "utf8"),
   ) as GeoJsonObject;
   const lines = getLines(geojson);
 
@@ -293,32 +178,32 @@ export default async function geoToBlender(
         )
     );
   } else {
-    const d3Projection = getProjection(projection);
-
-    if (options.rotate) {
-      d3Projection.rotate(options.rotate);
-    }
-
-    d3Projection.fitExtent(
-      [[-scale / 2, -scale / 2], [scale / 2, scale / 2]],
+    const d3Projection = fitProjection(
+      projection,
       linesToGeoJson(lines),
+      scale,
+      options.rotate,
     );
 
     objLines = lines.map((line) =>
       line.flatMap(([lon, lat]) => {
-        const projected = d3Projection([lon, lat]);
+        const projected = projectFlatCoordinate(
+          d3Projection,
+          lon,
+          lat,
+          options.decimals,
+        );
 
         if (projected === null) {
           return [];
         }
 
-        const [x, z] = projected;
-        return [[x, 0, z] as [number, number, number]];
+        return [projected];
       })
     );
   }
 
-  await Deno.writeTextFile(outputPath, toObj(objLines, options.decimals));
+  await writeFile(outputPath, toObj(objLines, options.decimals));
 
   return outputPath;
 }

@@ -26,6 +26,7 @@
 
 import geoTo3D from "./geo/geoTo3D.ts";
 import geoToBlender from "./geo/geoToBlender.ts";
+import geoToBlenderPoint from "./geo/geoToBlenderPoint.ts";
 import distance from "./geo/distance.ts";
 import styledLayerDescriptor from "./geo/styledLayerDescriptor.ts";
 import getClosest from "./geo/getClosest.ts";
@@ -37,11 +38,13 @@ export type {
   GeoToBlenderProjection,
   GeoToBlenderRotate,
 } from "./geo/geoToBlender.ts";
+export type { GeoToBlenderPointOptions } from "./geo/geoToBlenderPoint.ts";
 
 export {
   distance,
   geoTo3D,
   geoToBlender,
+  geoToBlenderPoint,
   getClosest,
   getGeoTiffDetails,
   getGeoTiffValues,

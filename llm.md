@@ -194,6 +194,66 @@ await geoToBlender("./data/canada.geojson", "mercator", "./output/canada.obj", {
 });
 ```
 
+## geoToBlenderPoint
+
+Converts one longitude/latitude coordinate into Blender coordinates.
+
+Flat projections are fitted to `options.fitTo` and placed on Blender's X/Z plane
+with Y up. The `"orthographic"` projection exports the coordinate in 3D on a
+sphere using `geoTo3D`.
+
+### Signature
+
+```typescript
+async function geoToBlenderPoint(
+  lon: number,
+  lat: number,
+  projection:
+    | "albers"
+    | "albersUsa"
+    | "conicConformal"
+    | "conicEqualArea"
+    | "conicEquidistant"
+    | "equirectangular"
+    | "equalEarth"
+    | "mercator"
+    | "naturalEarth1"
+    | "orthographic"
+    | "transverseMercator",
+  options: {
+    scale?: number;
+    decimals?: number;
+    rotate?: [number, number] | [number, number, number];
+    fitTo?: string | object;
+    toArray: true;
+  },
+): Promise<[number, number, number] | null>;
+```
+
+### Parameters
+
+- **`lon`**: The longitude of the geographical point, in degrees.
+- **`lat`**: The latitude of the geographical point, in degrees.
+- **`projection`**: The projection to use. Supports d3-geo conic and cylindrical
+  projection names, plus `"orthographic"` for a 3D globe point.
+- **`options`**: Optional settings for scale, coordinate rounding, projection
+  fitting, and return shape.
+
+### Returns
+
+A Promise that resolves to Blender coordinates, or `null` when a flat projection
+cannot project the coordinate.
+
+### Examples
+
+```ts
+const point = await geoToBlenderPoint(-73.5674, 45.5019, "mercator", {
+  fitTo: "./data/canada.geojson",
+  scale: 10,
+  decimals: 3,
+});
+```
+
 ## getClosest
 
 Finds the geographical item closest to a given reference point (longitude and

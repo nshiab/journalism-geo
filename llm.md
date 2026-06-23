@@ -136,6 +136,48 @@ const earthCoords = geoTo3D(0, 0, 6371, { decimals: 0 }); // Earth's approximate
 console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 lat/lon)
 ```
 
+## geoToBlender
+
+Converts GeoJSON borders into an OBJ file that can be imported in Blender.
+
+Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are
+exported as OBJ line geometry. Flat projections are fitted to the full GeoJSON
+extent and placed on Blender's X/Z plane with Y up. The `"orthographic"`
+projection exports borders in 3D on a sphere using `geoTo3D`, with extra
+vertices added along long segments.
+
+### Signature
+
+```typescript
+async function geoToBlender(
+  geojsonPath: string,
+  projection: GeoToBlenderProjection,
+  outputPath: string,
+  options?: GeoToBlenderOptions,
+): Promise<string>;
+```
+
+### Parameters
+
+- **`geojsonPath`**: The path to the GeoJSON file to convert.
+- **`projection`**: The projection to use. Supports d3-geo conic and cylindrical
+  projection names, plus `"orthographic"` for 3D globe borders.
+- **`outputPath`**: The path where the OBJ file will be written.
+- **`options`**: Optional settings for scale and coordinate rounding.
+
+### Returns
+
+A Promise that resolves to the output path.
+
+### Examples
+
+```ts
+await geoToBlender("./data/canada.geojson", "mercator", "./output/canada.obj", {
+  scale: 10,
+  decimals: 3,
+});
+```
+
 ## getClosest
 
 Finds the geographical item closest to a given reference point (longitude and

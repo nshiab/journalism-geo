@@ -123,7 +123,20 @@ Deno.test("should place flat projection points on Blender's X/Y plane", () => {
     decimals: 3,
   });
 
-  assertEquals(point, { x: -5, y: 5, z: 0 });
+  assertEquals(point, { x: -5, y: -5, z: 0 });
+});
+
+Deno.test("should place northern flat projection points above southern points", () => {
+  const south = geoToBlenderPoint(0, -1, "mercator", {
+    fitTo: square,
+    scale: 10,
+  });
+  const north = geoToBlenderPoint(0, 1, "mercator", {
+    fitTo: square,
+    scale: 10,
+  });
+
+  assert(north.y > south.y);
 });
 
 Deno.test("should place Canada points inside flat Blender boundary extents", async () => {

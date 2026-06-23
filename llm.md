@@ -142,9 +142,10 @@ Converts GeoJSON borders into an OBJ file that can be imported in Blender.
 
 Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are
 exported as OBJ line geometry. Flat projections are fitted to the full GeoJSON
-extent and placed on Blender's X/Y plane with Z up. The `"orthographic"`
-projection exports borders in 3D on a sphere using `geoTo3D`. Set
-`maxSegmentLength` to add extra vertices along long orthographic segments.
+extent and placed on Blender's X/Y plane with Z up and north toward positive Y.
+The `"orthographic"` projection exports borders in 3D on a sphere using
+`geoTo3D`. Set `maxSegmentLength` to add extra vertices along long orthographic
+segments.
 
 ### Signature
 
@@ -199,8 +200,8 @@ await geoToBlender("./data/canada.geojson", "mercator", "./output/canada.obj", {
 Converts one longitude/latitude coordinate into Blender coordinates.
 
 Flat projections are fitted to `options.fitTo` and placed on Blender's X/Y plane
-with Z up. The `"orthographic"` projection exports the coordinate in 3D on a
-sphere using `geoTo3D`.
+with Z up and north toward positive Y. The `"orthographic"` projection exports
+the coordinate in 3D on a sphere using `geoTo3D`.
 
 ### Signature
 

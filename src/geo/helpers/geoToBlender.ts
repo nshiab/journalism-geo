@@ -178,5 +178,5 @@ export function projectFlatCoordinate(
   }
 
   const [x, y] = projected;
-  return [roundValue(x, decimals), roundValue(y, decimals), 0];
+  return [roundValue(x, decimals), roundValue(-y, decimals), 0];
 }

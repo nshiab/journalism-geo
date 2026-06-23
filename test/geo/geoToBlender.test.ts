@@ -192,7 +192,7 @@ Deno.test("should rotate flat projections when requested", async () => {
   const rotated = await Deno.readTextFile(rotatedPath);
 
   assert(unrotated !== rotated);
-  assertStringIncludes(rotated, "v 5 2.545 0\n");
+  assertStringIncludes(rotated, "v 5 -2.545 0\n");
 });
 
 Deno.test("should write Canadian provinces and territories to an OBJ file", async () => {

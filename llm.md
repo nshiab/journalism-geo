@@ -143,8 +143,8 @@ Converts GeoJSON borders into an OBJ file that can be imported in Blender.
 Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are
 exported as OBJ line geometry. Flat projections are fitted to the full GeoJSON
 extent and placed on Blender's X/Z plane with Y up. The `"orthographic"`
-projection exports borders in 3D on a sphere using `geoTo3D`, with extra
-vertices added along long segments.
+projection exports borders in 3D on a sphere using `geoTo3D`. Set
+`maxSegmentLength` to add extra vertices along long orthographic segments.
 
 ### Signature
 

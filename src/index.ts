@@ -35,6 +35,7 @@ import getGeoTiffValues from "./geo/getGeoTiffValues.ts";
 export type {
   GeoToBlenderOptions,
   GeoToBlenderProjection,
+  GeoToBlenderRotate,
 } from "./geo/geoToBlender.ts";
 
 export {

@@ -38,8 +38,14 @@ type FlatProjection = {
     extent: [[number, number], [number, number]],
     object: GeoJsonObject,
   ) => FlatProjection;
+  rotate: (angles: GeoToBlenderRotate) => FlatProjection;
   (coordinates: [number, number]): [number, number] | null;
 };
+
+/** Rotation angles for flat d3-geo projections, in degrees. */
+export type GeoToBlenderRotate =
+  | [number, number]
+  | [number, number, number];
 
 /** The supported projection names for `geoToBlender`. */
 export type GeoToBlenderProjection =
@@ -68,8 +74,13 @@ export type GeoToBlenderOptions = {
    */
   decimals?: number;
   /**
+   * Rotation angles for flat d3-geo projections, in degrees.
+   * These values are passed to the projection's `rotate` method before fitting.
+   */
+  rotate?: GeoToBlenderRotate;
+  /**
    * The maximum angular distance, in degrees, between generated vertices for `"orthographic"`.
-   * @default 1
+   * By default, segments are not densified.
    */
   maxSegmentLength?: number;
 };
@@ -146,6 +157,13 @@ function getLines(geojson: GeoJsonObject): Position[][] {
   return [];
 }
 
+function linesToGeoJson(lines: Position[][]): GeoJsonGeometry {
+  return {
+    type: "MultiLineString",
+    coordinates: lines,
+  };
+}
+
 function roundValue(value: number, decimals?: number): number {
   if (typeof decimals === "number") {
     return parseFloat(value.toFixed(decimals));
@@ -215,7 +233,8 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  *
  * Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are exported as OBJ line geometry.
  * Flat projections are fitted to the full GeoJSON extent and placed on Blender's X/Z plane with Y up.
- * The `"orthographic"` projection exports borders in 3D on a sphere using `geoTo3D`, with extra vertices added along long segments.
+ * The `"orthographic"` projection exports borders in 3D on a sphere using `geoTo3D`.
+ * Set `maxSegmentLength` to add extra vertices along long orthographic segments.
  *
  * @param geojsonPath - The path to the GeoJSON file to convert.
  * @param projection - The projection to use. Supports d3-geo conic and cylindrical projection names, plus `"orthographic"` for 3D globe borders.
@@ -247,20 +266,26 @@ export default async function geoToBlender(
   let objLines: [number, number, number][][];
 
   if (projection === "orthographic") {
-    const maxSegmentLength = options.maxSegmentLength ?? 1;
-
     objLines = lines.map((line) =>
-      densifyLine(line, maxSegmentLength).map(([lon, lat]) =>
-        geoTo3D(lon, lat, scale, {
-          decimals: options.decimals,
-          toArray: true,
-        })
-      )
+      (typeof options.maxSegmentLength === "number"
+        ? densifyLine(line, options.maxSegmentLength)
+        : line).map(([lon, lat]) =>
+          geoTo3D(lon, lat, scale, {
+            decimals: options.decimals,
+            toArray: true,
+          })
+        )
     );
   } else {
-    const d3Projection = getProjection(projection).fitExtent(
+    const d3Projection = getProjection(projection);
+
+    if (options.rotate) {
+      d3Projection.rotate(options.rotate);
+    }
+
+    d3Projection.fitExtent(
       [[-scale / 2, -scale / 2], [scale / 2, scale / 2]],
-      geojson,
+      linesToGeoJson(lines),
     );
 
     objLines = lines.map((line) =>

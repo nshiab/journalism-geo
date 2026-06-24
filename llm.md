@@ -146,6 +146,11 @@ X/Y plane with Z up and north toward positive Y. The `"orthographic"` projection
 exports borders in 3D on a sphere using `geoTo3D`. Set `maxSegmentLength` to add
 extra vertices along long orthographic segments.
 
+When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON
+through {@link rewind} first. Many data sources wind their polygons the wrong
+way for `d3-geo`, which makes the fit collapse to a near-zero scale and produces
+an empty-looking OBJ.
+
 ### Signature
 
 ```typescript
@@ -175,12 +180,17 @@ A Promise that resolves to the output path.
 ### Examples
 
 ```ts
-import { geoMercator } from "d3-geo";
+import { geoToBlender, rewind } from "@nshiab/journalism-geo";
+import { geoConicConformal } from "d3-geo";
 import { readFile } from "node:fs/promises";
 
 const geojsonPath = "./data/canada.geojson";
 const geojson = JSON.parse(await readFile(geojsonPath, "utf8"));
-const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+// Rewind so fitExtent measures the real extent instead of collapsing.
+const domain = rewind(geojson);
+const projection = geoConicConformal()
+  .rotate([100, -60])
+  .fitExtent([[-5, -5], [5, 5]], domain);
 await geoToBlender(geojsonPath, projection, "./output/canada.obj", {
   decimals: 3,
 });
@@ -193,6 +203,12 @@ Converts one longitude/latitude coordinate into Blender coordinates.
 Flat projection functions are placed on Blender's X/Y plane with Z up and north
 toward positive Y. The `"orthographic"` projection exports the coordinate in 3D
 on a sphere using `geoTo3D`.
+
+When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON
+through {@link rewind} first. Many data sources wind their polygons the wrong
+way for `d3-geo`, which makes the fit collapse to a near-zero scale and places
+every point at nearly the same spot. Use the same fitted projection here as the
+one passed to `geoToBlender` so the point lines up with the borders.
 
 ### Signature
 
@@ -223,11 +239,16 @@ Blender coordinates.
 ### Examples
 
 ```ts
-import { geoMercator } from "d3-geo";
+import { geoToBlenderPoint, rewind } from "@nshiab/journalism-geo";
+import { geoConicConformal } from "d3-geo";
 import { readFile } from "node:fs/promises";
 
 const geojson = JSON.parse(await readFile("./data/canada.geojson", "utf8"));
-const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+// Rewind so fitExtent measures the real extent instead of collapsing.
+const domain = rewind(geojson);
+const projection = geoConicConformal()
+  .rotate([100, -60])
+  .fitExtent([[-5, -5], [5, 5]], domain);
 const point = geoToBlenderPoint(-73.5674, 45.5019, projection, {
   decimals: 3,
 });
@@ -444,6 +465,54 @@ A Promise that resolves to the pixel value at the specified coordinates, or a
 const geoTiffDetails = await getGeoTiffDetails("./some-file.tif");
 const value = await getGeoTiffValues(45.50, -73.57, geoTiffDetails);
 console.log(value); // 255
+```
+
+## rewind
+
+Fixes the winding order of GeoJSON polygons so they follow the right-hand rule
+expected by `d3-geo` (exterior rings counter-clockwise, holes clockwise).
+
+Many data sources (including shapefiles exported by GIS tools) wind their
+exterior rings clockwise. Because `d3-geo` is a spherical library, it reads a
+clockwise exterior ring as covering the entire globe _except_ that shape. This
+breaks anything that relies on polygon area or fill, most notably
+`fitExtent`/`fitSize`, which then collapse the projection's scale to nearly
+zero. Stroked outlines still look correct, which is why the problem often goes
+unnoticed until a projection is fitted to the raw polygons.
+
+Run the GeoJSON through `rewind` before fitting a projection to it to avoid
+this. The function returns a new object and does not mutate its input.
+Non-polygon geometries are returned unchanged.
+
+### Signature
+
+```typescript
+function rewind<T extends { type: string }>(geojson: T): T;
+```
+
+### Parameters
+
+- **`geojson`**: The GeoJSON object to rewind (a `Feature`, `FeatureCollection`,
+  or geometry).
+
+### Returns
+
+A new GeoJSON object of the same type with corrected polygon winding.
+
+### Examples
+
+```ts
+import { rewind } from "@nshiab/journalism-geo";
+import { geoConicConformal } from "d3-geo";
+import { readFile } from "node:fs/promises";
+
+const geojson = JSON.parse(await readFile("./data/canada.geojson", "utf8"));
+
+// Without rewinding, fitExtent collapses to a near-zero scale.
+const domain = rewind(geojson);
+const projection = geoConicConformal()
+  .rotate([100, -60])
+  .fitExtent([[-5, -5], [5, 5]], domain);
 ```
 
 ## styledLayerDescriptor

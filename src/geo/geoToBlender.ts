@@ -101,6 +101,8 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  * The `"orthographic"` projection exports borders in 3D on a sphere using `geoTo3D`.
  * Set `maxSegmentLength` to add extra vertices along long orthographic segments.
  *
+ * When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON through {@link rewind} first. Many data sources wind their polygons the wrong way for `d3-geo`, which makes the fit collapse to a near-zero scale and produces an empty-looking OBJ.
+ *
  * @param geojsonPath - The path to the GeoJSON file to convert.
  * @param projection - A flat projection function or `"orthographic"` for 3D globe borders.
  * @param outputPath - The path where the OBJ file will be written.
@@ -109,12 +111,17 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  *
  * @example
  * ```ts
- * import { geoMercator } from "d3-geo";
+ * import { geoToBlender, rewind } from "@nshiab/journalism-geo";
+ * import { geoConicConformal } from "d3-geo";
  * import { readFile } from "node:fs/promises";
  *
  * const geojsonPath = "./data/canada.geojson";
  * const geojson = JSON.parse(await readFile(geojsonPath, "utf8"));
- * const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+ * // Rewind so fitExtent measures the real extent instead of collapsing.
+ * const domain = rewind(geojson);
+ * const projection = geoConicConformal()
+ *   .rotate([100, -60])
+ *   .fitExtent([[-5, -5], [5, 5]], domain);
  * await geoToBlender(geojsonPath, projection, "./output/canada.obj", {
  *   decimals: 3,
  * });

@@ -1,7 +1,8 @@
 import { assert, assertEquals, assertThrows } from "jsr:@std/assert";
-import { geoAlbersUsa, geoMercator } from "d3-geo";
+import { geoAlbersUsa, geoConicConformal, geoMercator } from "d3-geo";
 import geoToBlender from "../../src/geo/geoToBlender.ts";
 import geoToBlenderPoint from "../../src/geo/geoToBlenderPoint.ts";
+import rewind from "../../src/geo/rewind.ts";
 import {
   type GeoJsonObject,
   getLines,
@@ -175,6 +176,41 @@ Deno.test("should place Canada points inside flat Blender boundary extents", asy
 
   assertEquals(bounds.minZ, 0);
   assertEquals(bounds.maxZ, 0);
+  assertEquals(point.z, 0);
+  assert(point.x >= bounds.minX && point.x <= bounds.maxX);
+  assert(point.y >= bounds.minY && point.y <= bounds.maxY);
+});
+
+Deno.test("should place a point inside extents when fitting a conic conformal to rewound polygons", async () => {
+  // Fitting geoConicConformal to the raw polygons collapses the projection to
+  // a near-zero scale (see geoToBlender.test.ts). Rewinding the polygons first
+  // gives a real extent, so the point and the borders share the same layout.
+  await Deno.mkdir(outputDir, { recursive: true });
+  const outputPath = `${outputDir}/canada-provinces-territories-rewound.obj`;
+  const domain = rewind(
+    JSON.parse(await Deno.readTextFile(provincesPath)) as GeoJsonObject,
+  );
+
+  const projection = geoConicConformal()
+    .rotate([100, -60])
+    .fitExtent(
+      [[-5, -5], [5, 5]],
+      domain as Parameters<
+        ReturnType<typeof geoConicConformal>["fitExtent"]
+      >[1],
+    );
+
+  await geoToBlender(provincesPath, projection, outputPath, {
+    decimals: 3,
+  });
+  const obj = await Deno.readTextFile(outputPath);
+  const bounds = vertexBounds(obj);
+  const point = geoToBlenderPoint(-75.6972, 45.4215, projection, {
+    decimals: 3,
+  });
+
+  // The fit is not collapsed: the borders span a real extent.
+  assert(Math.max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) > 5);
   assertEquals(point.z, 0);
   assert(point.x >= bounds.minX && point.x <= bounds.maxX);
   assert(point.y >= bounds.minY && point.y <= bounds.maxY);

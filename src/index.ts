@@ -34,11 +34,15 @@ import getGeoTiffDetails from "./geo/getGeoTiffDetails.ts";
 import getGeoTiffValues from "./geo/getGeoTiffValues.ts";
 
 export type {
+  GeoToBlenderFlatProjection,
   GeoToBlenderOptions,
   GeoToBlenderProjection,
-  GeoToBlenderRotate,
 } from "./geo/geoToBlender.ts";
-export type { GeoToBlenderPointOptions } from "./geo/geoToBlenderPoint.ts";
+export type {
+  GeoToBlenderPointFlatProjection,
+  GeoToBlenderPointOptions,
+  GeoToBlenderPointProjection,
+} from "./geo/geoToBlenderPoint.ts";
 
 export {
   distance,

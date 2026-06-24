@@ -1,81 +1,120 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert";
+import {
+  geoAlbers,
+  geoAlbersUsa,
+  geoConicConformal,
+  geoConicEqualArea,
+  geoConicEquidistant,
+  geoEqualEarth,
+  geoEquirectangular,
+  geoMercator,
+  geoNaturalEarth1,
+  geoTransverseMercator,
+} from "d3-geo";
 import geoToBlender from "../../src/geo/geoToBlender.ts";
+import {
+  type GeoJsonObject,
+  getLines,
+} from "../../src/geo/helpers/blenderProjection.ts";
 
 const outputDir = "test/output/geoToBlender";
 const provincesPath = "test/data/lpr_000b21a_e.json";
 
-const flatProjections = [
-  "albers",
-  "albersUsa",
-  "conicConformal",
-  "conicEqualArea",
-  "conicEquidistant",
-  "equalEarth",
-  "equirectangular",
-  "mercator",
-  "naturalEarth1",
-  "transverseMercator",
-] as const;
+const flatProjections = {
+  albers: geoAlbers,
+  albersUsa: geoAlbersUsa,
+  conicConformal: geoConicConformal,
+  conicEqualArea: geoConicEqualArea,
+  conicEquidistant: geoConicEquidistant,
+  equalEarth: geoEqualEarth,
+  equirectangular: geoEquirectangular,
+  mercator: geoMercator,
+  naturalEarth1: geoNaturalEarth1,
+  transverseMercator: geoTransverseMercator,
+} as const;
+
+const squareCoordinates: [number, number][][] = [[
+  [-1, -1],
+  [1, -1],
+  [1, 1],
+  [-1, 1],
+  [-1, -1],
+]];
+
+const usSquareCoordinates: [number, number][][] = [[
+  [-101, 39],
+  [-99, 39],
+  [-99, 41],
+  [-101, 41],
+  [-101, 39],
+]];
+
+const rotatedSquareCoordinates: [number, number][][] = [[
+  [0, 40],
+  [10, 40],
+  [10, 50],
+  [0, 50],
+  [0, 40],
+]];
 
 const square = {
-  type: "FeatureCollection",
+  type: "FeatureCollection" as const,
   features: [
     {
-      type: "Feature",
+      type: "Feature" as const,
       properties: {},
       geometry: {
-        type: "Polygon",
-        coordinates: [[
-          [-1, -1],
-          [1, -1],
-          [1, 1],
-          [-1, 1],
-          [-1, -1],
-        ]],
+        type: "Polygon" as const,
+        coordinates: squareCoordinates,
       },
     },
   ],
 };
 
 const usSquare = {
-  type: "FeatureCollection",
+  type: "FeatureCollection" as const,
   features: [
     {
-      type: "Feature",
+      type: "Feature" as const,
       properties: {},
       geometry: {
-        type: "Polygon",
-        coordinates: [[
-          [-101, 39],
-          [-99, 39],
-          [-99, 41],
-          [-101, 41],
-          [-101, 39],
-        ]],
+        type: "Polygon" as const,
+        coordinates: usSquareCoordinates,
       },
     },
   ],
 };
 
 const rotatedSquare = {
-  type: "FeatureCollection",
+  type: "FeatureCollection" as const,
   features: [
     {
-      type: "Feature",
+      type: "Feature" as const,
       properties: {},
       geometry: {
-        type: "Polygon",
-        coordinates: [[
-          [0, 40],
-          [10, 40],
-          [10, 50],
-          [0, 50],
-          [0, 40],
-        ]],
+        type: "Polygon" as const,
+        coordinates: rotatedSquareCoordinates,
       },
     },
   ],
 };
+
+function fitGeoJsonProjection(
+  projectionName: keyof typeof flatProjections,
+  geojson: GeoJsonObject,
+  rotate?: [number, number] | [number, number, number],
+) {
+  const projection = flatProjections[projectionName]();
+
+  if (rotate) {
+    projection.rotate(rotate);
+  }
+
+  return projection.fitExtent([[-5, -5], [5, 5]], {
+    type: "MultiLineString",
+    coordinates: getLines(geojson),
+  });
+}
 
 async function writeGeoJson(
   name: string,
@@ -107,18 +146,27 @@ function countObjRecords(obj: string, record: "v" | "l"): number {
     .filter((line) => line.startsWith(`${record} `)).length;
 }
 
-for (const projection of flatProjections) {
-  Deno.test(`should write ${projection} GeoJSON borders to an OBJ file`, async () => {
-    const geojsonPath = await writeGeoJson(
-      `square-${projection}`,
-      projection === "albersUsa" ? usSquare : square,
-    );
-    const outputPath = `${outputDir}/square-${projection}.obj`;
+for (
+  const projectionName of Object.keys(flatProjections) as Array<
+    keyof typeof flatProjections
+  >
+) {
+  Deno.test(`should write ${projectionName} GeoJSON borders to an OBJ file`, async () => {
+    const geojson = projectionName === "albersUsa" ? usSquare : square;
+    const geojsonPath = await writeGeoJson(`square-${projectionName}`, geojson);
+    const outputPath = `${outputDir}/square-${projectionName}.obj`;
 
-    const result = await geoToBlender(geojsonPath, projection, outputPath, {
-      scale: 10,
-      decimals: 3,
-    });
+    const result = await geoToBlender(
+      geojsonPath,
+      fitGeoJsonProjection(
+        projectionName,
+        geojson,
+      ),
+      outputPath,
+      {
+        decimals: 3,
+      },
+    );
     const obj = await Deno.readTextFile(outputPath);
 
     assertEquals(result, outputPath);
@@ -136,7 +184,7 @@ Deno.test("should write orthographic GeoJSON borders as 3D vertices", async () =
   const outputPath = `${outputDir}/square-orthographic.obj`;
 
   await geoToBlender(geojsonPath, "orthographic", outputPath, {
-    scale: 1,
+    radius: 1,
     decimals: 3,
   });
   const obj = await Deno.readTextFile(outputPath);
@@ -150,7 +198,7 @@ Deno.test("should densify orthographic border segments when requested", async ()
   const outputPath = `${outputDir}/square-orthographic-densified.obj`;
 
   await geoToBlender(geojsonPath, "orthographic", outputPath, {
-    scale: 1,
+    radius: 1,
     decimals: 3,
     maxSegmentLength: 1,
   });
@@ -164,7 +212,7 @@ Deno.test("should allow explicitly longer orthographic border segments", async (
   const outputPath = `${outputDir}/square-orthographic-long-segments.obj`;
 
   await geoToBlender(geojsonPath, "orthographic", outputPath, {
-    scale: 1,
+    radius: 1,
     decimals: 3,
     maxSegmentLength: 10,
   });
@@ -178,15 +226,29 @@ Deno.test("should rotate flat projections when requested", async () => {
   const unrotatedPath = `${outputDir}/square-conicConformal-unrotated.obj`;
   const rotatedPath = `${outputDir}/square-conicConformal-rotated.obj`;
 
-  await geoToBlender(geojsonPath, "conicConformal", unrotatedPath, {
-    scale: 10,
-    decimals: 3,
-  });
-  await geoToBlender(geojsonPath, "conicConformal", rotatedPath, {
-    scale: 10,
-    decimals: 3,
-    rotate: [100, -60],
-  });
+  await geoToBlender(
+    geojsonPath,
+    fitGeoJsonProjection(
+      "conicConformal",
+      rotatedSquare,
+    ),
+    unrotatedPath,
+    {
+      decimals: 3,
+    },
+  );
+  await geoToBlender(
+    geojsonPath,
+    fitGeoJsonProjection(
+      "conicConformal",
+      rotatedSquare,
+      [100, -60],
+    ),
+    rotatedPath,
+    {
+      decimals: 3,
+    },
+  );
 
   const unrotated = await Deno.readTextFile(unrotatedPath);
   const rotated = await Deno.readTextFile(rotatedPath);
@@ -199,10 +261,20 @@ Deno.test("should write Canadian provinces and territories to an OBJ file", asyn
   await Deno.mkdir(outputDir, { recursive: true });
   const outputPath = `${outputDir}/canada-provinces-territories.obj`;
 
-  const result = await geoToBlender(provincesPath, "mercator", outputPath, {
-    scale: 10,
-    decimals: 3,
-  });
+  const canadaGeoJson = JSON.parse(
+    await Deno.readTextFile(provincesPath),
+  ) as GeoJsonObject;
+  const result = await geoToBlender(
+    provincesPath,
+    fitGeoJsonProjection(
+      "mercator",
+      canadaGeoJson,
+    ),
+    outputPath,
+    {
+      decimals: 3,
+    },
+  );
   const obj = await Deno.readTextFile(outputPath);
 
   assertEquals(result, outputPath);
@@ -219,15 +291,16 @@ Deno.test("should write Canadian provinces and territories to a conic conformal 
   await Deno.mkdir(outputDir, { recursive: true });
   const outputPath =
     `${outputDir}/canada-provinces-territories-conicConformal.obj`;
+  const canadaGeoJson = JSON.parse(
+    await Deno.readTextFile(provincesPath),
+  ) as GeoJsonObject;
 
   const result = await geoToBlender(
     provincesPath,
-    "conicConformal",
+    fitGeoJsonProjection("conicConformal", canadaGeoJson, [100, -60]),
     outputPath,
     {
-      scale: 10,
       decimals: 3,
-      rotate: [100, -60],
     },
   );
   const obj = await Deno.readTextFile(outputPath);
@@ -248,7 +321,7 @@ Deno.test("should write Canadian provinces and territories to an orthographic OB
     `${outputDir}/canada-provinces-territories-orthographic.obj`;
 
   const result = await geoToBlender(provincesPath, "orthographic", outputPath, {
-    scale: 10,
+    radius: 10,
     decimals: 3,
   });
   const obj = await Deno.readTextFile(outputPath);

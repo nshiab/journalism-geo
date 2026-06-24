@@ -2,38 +2,34 @@ import { geoDistance, geoInterpolate } from "d3-geo";
 import { readFile, writeFile } from "node:fs/promises";
 import geoTo3D from "./geoTo3D.ts";
 import {
-  fitProjection,
   type GeoJsonObject,
   getLines,
-  linesToGeoJson,
   type Position,
   projectFlatCoordinate,
   roundValue,
-} from "./helpers/geoToBlender.ts";
+} from "./helpers/blenderProjection.ts";
 
-/** Rotation angles for flat d3-geo projections, in degrees. */
-export type { GeoToBlenderRotate } from "./helpers/geoToBlender.ts";
+/** A fitted flat projection that converts longitude/latitude coordinates to x/y coordinates. */
+export type GeoToBlenderFlatProjection = (
+  coordinates: [number, number],
+) => [number, number] | null;
 
-/** The supported projection names for `geoToBlender`. */
-export type { GeoToBlenderProjection } from "./helpers/geoToBlender.ts";
+/** A projection function or `"orthographic"` for 3D globe borders. */
+export type GeoToBlenderProjection =
+  | "orthographic"
+  | GeoToBlenderFlatProjection;
 
 /** Options for converting GeoJSON borders into a Blender OBJ file. */
 export type GeoToBlenderOptions = {
   /**
-   * For flat projections, the width and height of the fitted projection extent in Blender units.
    * For `"orthographic"`, the radius of the sphere in Blender units.
    * @default 10
    */
-  scale?: number;
+  radius?: number;
   /**
    * The number of decimal places to round OBJ coordinates to.
    */
   decimals?: number;
-  /**
-   * Rotation angles for flat d3-geo projections, in degrees.
-   * These values are passed to the projection's `rotate` method before fitting.
-   */
-  rotate?: [number, number] | [number, number, number];
   /**
    * The maximum angular distance, in degrees, between generated vertices for `"orthographic"`.
    * By default, segments are not densified.
@@ -101,20 +97,25 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  * Converts GeoJSON borders into an OBJ file that can be imported in Blender.
  *
  * Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are exported as OBJ line geometry.
- * Flat projections are fitted to the full GeoJSON extent and placed on Blender's X/Y plane with Z up and north toward positive Y.
+ * Flat projection functions are placed on Blender's X/Y plane with Z up and north toward positive Y.
  * The `"orthographic"` projection exports borders in 3D on a sphere using `geoTo3D`.
  * Set `maxSegmentLength` to add extra vertices along long orthographic segments.
  *
  * @param geojsonPath - The path to the GeoJSON file to convert.
- * @param projection - The projection to use. Supports d3-geo conic and cylindrical projection names, plus `"orthographic"` for 3D globe borders.
+ * @param projection - A flat projection function or `"orthographic"` for 3D globe borders.
  * @param outputPath - The path where the OBJ file will be written.
- * @param options - Optional settings for scale and coordinate rounding.
+ * @param options - Optional settings for orthographic radius, coordinate rounding, and orthographic segment densification.
  * @returns A Promise that resolves to the output path.
  *
  * @example
  * ```ts
- * await geoToBlender("./data/canada.geojson", "mercator", "./output/canada.obj", {
- *   scale: 10,
+ * import { geoMercator } from "d3-geo";
+ * import { readFile } from "node:fs/promises";
+ *
+ * const geojsonPath = "./data/canada.geojson";
+ * const geojson = JSON.parse(await readFile(geojsonPath, "utf8"));
+ * const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+ * await geoToBlender(geojsonPath, projection, "./output/canada.obj", {
  *   decimals: 3,
  * });
  * ```
@@ -123,34 +124,19 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
 export default async function geoToBlender(
   geojsonPath: string,
   projection:
-    | "albers"
-    | "albersUsa"
-    | "conicConformal"
-    | "conicEqualArea"
-    | "conicEquidistant"
-    | "equirectangular"
-    | "equalEarth"
-    | "mercator"
-    | "naturalEarth1"
     | "orthographic"
-    | "transverseMercator",
+    | ((coordinates: [number, number]) => [number, number] | null),
   outputPath: string,
   options: {
     /**
-     * For flat projections, the width and height of the fitted projection extent in Blender units.
      * For `"orthographic"`, the radius of the sphere in Blender units.
      * @default 10
      */
-    scale?: number;
+    radius?: number;
     /**
      * The number of decimal places to round OBJ coordinates to.
      */
     decimals?: number;
-    /**
-     * Rotation angles for flat d3-geo projections, in degrees.
-     * These values are passed to the projection's `rotate` method before fitting.
-     */
-    rotate?: [number, number] | [number, number, number];
     /**
      * The maximum angular distance, in degrees, between generated vertices for `"orthographic"`.
      * By default, segments are not densified.
@@ -158,7 +144,7 @@ export default async function geoToBlender(
     maxSegmentLength?: number;
   } = {},
 ): Promise<string> {
-  const scale = options.scale ?? 10;
+  const radius = options.radius ?? 10;
   const geojson = JSON.parse(
     await readFile(geojsonPath, "utf8"),
   ) as GeoJsonObject;
@@ -171,24 +157,17 @@ export default async function geoToBlender(
       (typeof options.maxSegmentLength === "number"
         ? densifyLine(line, options.maxSegmentLength)
         : line).map(([lon, lat]) =>
-          geoTo3D(lon, lat, scale, {
+          geoTo3D(lon, lat, radius, {
             decimals: options.decimals,
             toArray: true,
           })
         )
     );
   } else {
-    const d3Projection = fitProjection(
-      projection,
-      linesToGeoJson(lines),
-      scale,
-      options.rotate,
-    );
-
     objLines = lines.map((line) =>
       line.flatMap(([lon, lat]) => {
         const projected = projectFlatCoordinate(
-          d3Projection,
+          projection,
           lon,
           lat,
           options.decimals,

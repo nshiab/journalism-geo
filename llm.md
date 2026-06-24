@@ -141,11 +141,10 @@ console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 l
 Converts GeoJSON borders into an OBJ file that can be imported in Blender.
 
 Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are
-exported as OBJ line geometry. Flat projections are fitted to the full GeoJSON
-extent and placed on Blender's X/Y plane with Z up and north toward positive Y.
-The `"orthographic"` projection exports borders in 3D on a sphere using
-`geoTo3D`. Set `maxSegmentLength` to add extra vertices along long orthographic
-segments.
+exported as OBJ line geometry. Flat projection functions are placed on Blender's
+X/Y plane with Z up and north toward positive Y. The `"orthographic"` projection
+exports borders in 3D on a sphere using `geoTo3D`. Set `maxSegmentLength` to add
+extra vertices along long orthographic segments.
 
 ### Signature
 
@@ -153,34 +152,21 @@ segments.
 async function geoToBlender(
   geojsonPath: string,
   projection:
-    | "albers"
-    | "albersUsa"
-    | "conicConformal"
-    | "conicEqualArea"
-    | "conicEquidistant"
-    | "equirectangular"
-    | "equalEarth"
-    | "mercator"
-    | "naturalEarth1"
     | "orthographic"
-    | "transverseMercator",
+    | ((coordinates: [number, number]) => [number, number] | null),
   outputPath: string,
-  options?: {
-    scale?: number;
-    decimals?: number;
-    rotate?: [number, number] | [number, number, number];
-    maxSegmentLength?: number;
-  },
+  options?: { radius?: number; decimals?: number; maxSegmentLength?: number },
 ): Promise<string>;
 ```
 
 ### Parameters
 
 - **`geojsonPath`**: The path to the GeoJSON file to convert.
-- **`projection`**: The projection to use. Supports d3-geo conic and cylindrical
-  projection names, plus `"orthographic"` for 3D globe borders.
+- **`projection`**: A flat projection function or `"orthographic"` for 3D globe
+  borders.
 - **`outputPath`**: The path where the OBJ file will be written.
-- **`options`**: Optional settings for scale and coordinate rounding.
+- **`options`**: Optional settings for orthographic radius, coordinate rounding,
+  and orthographic segment densification.
 
 ### Returns
 
@@ -189,8 +175,13 @@ A Promise that resolves to the output path.
 ### Examples
 
 ```ts
-await geoToBlender("./data/canada.geojson", "mercator", "./output/canada.obj", {
-  scale: 10,
+import { geoMercator } from "d3-geo";
+import { readFile } from "node:fs/promises";
+
+const geojsonPath = "./data/canada.geojson";
+const geojson = JSON.parse(await readFile(geojsonPath, "utf8"));
+const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+await geoToBlender(geojsonPath, projection, "./output/canada.obj", {
   decimals: 3,
 });
 ```
@@ -199,9 +190,9 @@ await geoToBlender("./data/canada.geojson", "mercator", "./output/canada.obj", {
 
 Converts one longitude/latitude coordinate into Blender coordinates.
 
-Flat projections are fitted to `options.fitTo` and placed on Blender's X/Y plane
-with Z up and north toward positive Y. The `"orthographic"` projection exports
-the coordinate in 3D on a sphere using `geoTo3D`.
+Flat projection functions are placed on Blender's X/Y plane with Z up and north
+toward positive Y. The `"orthographic"` projection exports the coordinate in 3D
+on a sphere using `geoTo3D`.
 
 ### Signature
 
@@ -210,35 +201,20 @@ function geoToBlenderPoint(
   lon: number,
   lat: number,
   projection:
-    | "albers"
-    | "albersUsa"
-    | "conicConformal"
-    | "conicEqualArea"
-    | "conicEquidistant"
-    | "equirectangular"
-    | "equalEarth"
-    | "mercator"
-    | "naturalEarth1"
     | "orthographic"
-    | "transverseMercator",
-  options: {
-    scale?: number;
-    decimals?: number;
-    rotate?: [number, number] | [number, number, number];
-    fitTo?: object;
-    toArray: true;
-  },
-): [number, number, number];
+    | ((coordinates: [number, number]) => [number, number] | null),
+  options?: { radius?: number; decimals?: number; toArray?: false },
+): { x: number; y: number; z: number };
 ```
 
 ### Parameters
 
 - **`lon`**: The longitude of the geographical point, in degrees.
 - **`lat`**: The latitude of the geographical point, in degrees.
-- **`projection`**: The projection to use. Supports d3-geo conic and cylindrical
-  projection names, plus `"orthographic"` for a 3D globe point.
-- **`options`**: Optional settings for scale, coordinate rounding, projection
-  fitting, and return shape.
+- **`projection`**: A flat projection function or `"orthographic"` for a 3D
+  globe point.
+- **`options`**: Optional settings for orthographic radius, coordinate rounding,
+  and return shape.
 
 ### Returns
 
@@ -247,9 +223,12 @@ Blender coordinates.
 ### Examples
 
 ```ts
-const point = geoToBlenderPoint(-73.5674, 45.5019, "mercator", {
-  fitTo: canadaGeoJson,
-  scale: 10,
+import { geoMercator } from "d3-geo";
+import { readFile } from "node:fs/promises";
+
+const geojson = JSON.parse(await readFile("./data/canada.geojson", "utf8"));
+const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+const point = geoToBlenderPoint(-73.5674, 45.5019, projection, {
   decimals: 3,
 });
 ```

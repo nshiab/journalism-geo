@@ -12,6 +12,7 @@ import {
   geoTransverseMercator,
 } from "d3-geo";
 import geoToBlender from "../../src/geo/geoToBlender.ts";
+import rewind from "../../src/geo/rewind.ts";
 import {
   type GeoJsonObject,
   getLines,
@@ -312,6 +313,78 @@ Deno.test("should write Canadian provinces and territories to a conic conformal 
   assert(countObjRecords(obj, "l") > 100);
   assert(
     Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
+  );
+});
+
+Deno.test("should collapse when a conic conformal is fitted to raw polygons instead of lines", async () => {
+  // Reproduces a real gotcha: fitting geoConicConformal directly to the
+  // FeatureCollection (polygons) makes fitExtent measure the filled polygon
+  // across the projection's pole singularity, blowing up the bounds and
+  // crushing the scale to ~0.0015. Every coordinate collapses onto a single
+  // point, so the OBJ is a degenerate dot and nothing shows up in Blender.
+  // The fix is to fit to line geometry instead (see getLines / the test below).
+  await Deno.mkdir(outputDir, { recursive: true });
+  const outputPath =
+    `${outputDir}/canada-provinces-territories-conicConformal-collapsed.obj`;
+  const domain = JSON.parse(
+    await Deno.readTextFile(provincesPath),
+  ) as GeoJsonObject;
+
+  const projection = geoConicConformal()
+    .rotate([100, -60])
+    .fitExtent(
+      [[-5, -5], [5, 5]],
+      domain as Parameters<
+        ReturnType<typeof geoConicConformal>["fitExtent"]
+      >[1],
+    );
+
+  await geoToBlender(provincesPath, projection, outputPath, {
+    decimals: 3,
+  });
+  const obj = await Deno.readTextFile(outputPath);
+
+  // Geometry is still written, it is just collapsed onto a single point.
+  assert(countObjRecords(obj, "v") > 1000);
+  assert(countObjRecords(obj, "l") > 100);
+  assert(
+    Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) < 0.1,
+    "expected the raw-polygon fit to collapse the geometry",
+  );
+});
+
+Deno.test("should fit a conic conformal to raw polygons once they are rewound", async () => {
+  // Same projection and fit as the collapse test above, but the polygons are
+  // rewound first so their exterior rings follow d3-geo's right-hand rule.
+  // fitExtent then measures the real extent and the geometry is laid out
+  // correctly instead of collapsing.
+  await Deno.mkdir(outputDir, { recursive: true });
+  const outputPath =
+    `${outputDir}/canada-provinces-territories-conicConformal-rewound.obj`;
+  const domain = rewind(
+    JSON.parse(await Deno.readTextFile(provincesPath)) as GeoJsonObject,
+  );
+
+  const projection = geoConicConformal()
+    .rotate([100, -60])
+    .fitExtent(
+      [[-5, -5], [5, 5]],
+      domain as Parameters<
+        ReturnType<typeof geoConicConformal>["fitExtent"]
+      >[1],
+    );
+
+  const result = await geoToBlender(provincesPath, projection, outputPath, {
+    decimals: 3,
+  });
+  const obj = await Deno.readTextFile(outputPath);
+
+  assertEquals(result, outputPath);
+  assert(countObjRecords(obj, "v") > 1000);
+  assert(countObjRecords(obj, "l") > 100);
+  assert(
+    Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
+    "expected the rewound fit to span the full extent",
   );
 });
 

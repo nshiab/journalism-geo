@@ -35,6 +35,8 @@ export type GeoToBlenderPointOptions = {
  * Flat projection functions are placed on Blender's X/Y plane with Z up and north toward positive Y.
  * The `"orthographic"` projection exports the coordinate in 3D on a sphere using `geoTo3D`.
  *
+ * When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON through {@link rewind} first. Many data sources wind their polygons the wrong way for `d3-geo`, which makes the fit collapse to a near-zero scale and places every point at nearly the same spot. Use the same fitted projection here as the one passed to `geoToBlender` so the point lines up with the borders.
+ *
  * @param lon - The longitude of the geographical point, in degrees.
  * @param lat - The latitude of the geographical point, in degrees.
  * @param projection - A flat projection function or `"orthographic"` for a 3D globe point.
@@ -43,11 +45,16 @@ export type GeoToBlenderPointOptions = {
  *
  * @example
  * ```ts
- * import { geoMercator } from "d3-geo";
+ * import { geoToBlenderPoint, rewind } from "@nshiab/journalism-geo";
+ * import { geoConicConformal } from "d3-geo";
  * import { readFile } from "node:fs/promises";
  *
  * const geojson = JSON.parse(await readFile("./data/canada.geojson", "utf8"));
- * const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], geojson);
+ * // Rewind so fitExtent measures the real extent instead of collapsing.
+ * const domain = rewind(geojson);
+ * const projection = geoConicConformal()
+ *   .rotate([100, -60])
+ *   .fitExtent([[-5, -5], [5, 5]], domain);
  * const point = geoToBlenderPoint(-73.5674, 45.5019, projection, {
  *   decimals: 3,
  * });
@@ -92,6 +99,8 @@ export default function geoToBlenderPoint(
  *
  * @example
  * ```ts
+ * import { geoToBlenderPoint } from "@nshiab/journalism-geo";
+ *
  * const point = geoToBlenderPoint(-73.5674, 45.5019, "orthographic", {
  *   radius: 10,
  *   decimals: 3,

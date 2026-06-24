@@ -32,6 +32,7 @@ import styledLayerDescriptor from "./geo/styledLayerDescriptor.ts";
 import getClosest from "./geo/getClosest.ts";
 import getGeoTiffDetails from "./geo/getGeoTiffDetails.ts";
 import getGeoTiffValues from "./geo/getGeoTiffValues.ts";
+import rewind from "./geo/rewind.ts";
 
 export type {
   GeoToBlenderFlatProjection,
@@ -52,5 +53,6 @@ export {
   getClosest,
   getGeoTiffDetails,
   getGeoTiffValues,
+  rewind,
   styledLayerDescriptor,
 };

@@ -97,6 +97,7 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  * Converts GeoJSON borders into an OBJ file that can be imported in Blender.
  *
  * Polygon rings, MultiPolygon rings, LineStrings, and MultiLineStrings are exported as OBJ line geometry.
+ * Polygon and MultiPolygon rings are always closed into loops (a closing coordinate is appended when the source data omits it), while LineStrings and MultiLineStrings are left exactly as provided.
  * Flat projection functions are placed on Blender's X/Y plane with Z up and north toward positive Y.
  * The `"orthographic"` projection exports borders in 3D on a sphere using `geoTo3D`.
  * Set `maxSegmentLength` to add extra vertices along long orthographic segments.

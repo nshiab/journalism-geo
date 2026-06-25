@@ -180,6 +180,87 @@ for (
   });
 }
 
+Deno.test("should close polygon rings that omit the repeated closing coordinate", async () => {
+  const openSquare = {
+    type: "FeatureCollection" as const,
+    features: [
+      {
+        type: "Feature" as const,
+        properties: {},
+        geometry: {
+          type: "Polygon" as const,
+          // Last coordinate intentionally omitted, so the ring is left open.
+          coordinates: [[
+            [-1, -1],
+            [1, -1],
+            [1, 1],
+            [-1, 1],
+          ]] as [number, number][][],
+        },
+      },
+    ],
+  };
+
+  const geojsonPath = await writeGeoJson(
+    "square-open-ring",
+    openSquare as unknown as typeof square,
+  );
+  const outputPath = `${outputDir}/square-open-ring.obj`;
+
+  await geoToBlender(
+    geojsonPath,
+    fitGeoJsonProjection("mercator", openSquare as unknown as GeoJsonObject),
+    outputPath,
+    { decimals: 3 },
+  );
+  const obj = await Deno.readTextFile(outputPath);
+
+  // The four input vertices plus the appended closing vertex form a loop.
+  assertEquals(countObjRecords(obj, "v"), 5);
+  assertStringIncludes(obj, "l 1 2 3 4 5\n");
+
+  const vertices = obj.split("\n").filter((line) => line.startsWith("v "));
+  assertEquals(vertices[0], vertices[4]);
+});
+
+Deno.test("should leave open LineString borders open", async () => {
+  const openLine = {
+    type: "FeatureCollection" as const,
+    features: [
+      {
+        type: "Feature" as const,
+        properties: {},
+        geometry: {
+          type: "LineString" as const,
+          coordinates: [
+            [-1, -1],
+            [1, -1],
+            [1, 1],
+          ] as [number, number][],
+        },
+      },
+    ],
+  };
+
+  const geojsonPath = await writeGeoJson(
+    "open-line",
+    openLine as unknown as typeof square,
+  );
+  const outputPath = `${outputDir}/open-line.obj`;
+
+  await geoToBlender(
+    geojsonPath,
+    fitGeoJsonProjection("mercator", openLine as unknown as GeoJsonObject),
+    outputPath,
+    { decimals: 3 },
+  );
+  const obj = await Deno.readTextFile(outputPath);
+
+  // No closing vertex is appended to a LineString.
+  assertEquals(countObjRecords(obj, "v"), 3);
+  assertStringIncludes(obj, "l 1 2 3\n");
+});
+
 Deno.test("should write orthographic GeoJSON borders as 3D vertices", async () => {
   const geojsonPath = await writeGeoJson("square-orthographic");
   const outputPath = `${outputDir}/square-orthographic.obj`;

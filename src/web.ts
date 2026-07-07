@@ -23,6 +23,7 @@ import geoTo3D from "./geo/geoTo3D.ts";
 import distance from "./geo/distance.ts";
 import styledLayerDescriptor from "./geo/styledLayerDescriptor.ts";
 import getClosest from "./geo/getClosest.ts";
-import rewind from "./geo/rewind.ts";
+// Exported from journalism-dataviz
+// import rewind from "./geo/rewind.ts";
 
-export { distance, geoTo3D, getClosest, rewind, styledLayerDescriptor };
+export { distance, geoTo3D, getClosest, /* rewind, */ styledLayerDescriptor };

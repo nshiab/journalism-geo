@@ -470,54 +470,6 @@ const value = await getGeoTiffValues(45.50, -73.57, geoTiffDetails);
 console.log(value); // 255
 ```
 
-## rewind
-
-Fixes the winding order of GeoJSON polygons so they follow the right-hand rule
-expected by `d3-geo` (exterior rings counter-clockwise, holes clockwise).
-
-Many data sources (including shapefiles exported by GIS tools) wind their
-exterior rings clockwise. Because `d3-geo` is a spherical library, it reads a
-clockwise exterior ring as covering the entire globe _except_ that shape. This
-breaks anything that relies on polygon area or fill, most notably
-`fitExtent`/`fitSize`, which then collapse the projection's scale to nearly
-zero. Stroked outlines still look correct, which is why the problem often goes
-unnoticed until a projection is fitted to the raw polygons.
-
-Run the GeoJSON through `rewind` before fitting a projection to it to avoid
-this. The function returns a new object and does not mutate its input.
-Non-polygon geometries are returned unchanged.
-
-### Signature
-
-```typescript
-function rewind<T extends { type: string }>(geojson: T): T;
-```
-
-### Parameters
-
-- **`geojson`**: The GeoJSON object to rewind (a `Feature`, `FeatureCollection`,
-  or geometry).
-
-### Returns
-
-A new GeoJSON object of the same type with corrected polygon winding.
-
-### Examples
-
-```ts
-import { rewind } from "@nshiab/journalism-geo";
-import { geoConicConformal } from "d3-geo";
-import { readFile } from "node:fs/promises";
-
-const geojson = JSON.parse(await readFile("./data/canada.geojson", "utf8"));
-
-// Without rewinding, fitExtent collapses to a near-zero scale.
-const domain = rewind(geojson);
-const projection = geoConicConformal()
-  .rotate([100, -60])
-  .fitExtent([[-5, -5], [5, 5]], domain);
-```
-
 ## styledLayerDescriptor
 
 Generates an OpenGIS Styled Layer Descriptor (SLD) XML string, encoded for use

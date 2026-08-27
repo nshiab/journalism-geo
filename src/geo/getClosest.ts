@@ -1,5 +1,24 @@
-import { minIndex } from "d3-array";
 import distance from "./distance.ts";
+
+// Adapted from d3-array's minIndex implementation.
+function minIndex(values: number[]): number {
+  let min: number | undefined;
+  let minIndex = -1;
+
+  for (let index = 0; index < values.length; index += 1) {
+    const value = values[index];
+
+    if (
+      (min === undefined && value >= value) ||
+      (min !== undefined && min > value)
+    ) {
+      min = value;
+      minIndex = index;
+    }
+  }
+
+  return minIndex;
+}
 
 /**
  * Finds the geographical item closest to a given reference point (longitude and latitude) from a list of geographical items.

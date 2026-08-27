@@ -1,4 +1,3 @@
-import { geoDistance, geoInterpolate } from "d3-geo";
 import { readFile, writeFile } from "node:fs/promises";
 import geoTo3D from "./geoTo3D.ts";
 import {
@@ -36,6 +35,56 @@ export type GeoToBlenderOptions = {
    */
   maxSegmentLength?: number;
 };
+
+type GreatCircleInterpolator = ((t: number) => Position) & {
+  distance: number;
+};
+
+// Adapted from d3-geo's spherical great-circle interpolation.
+function interpolateGreatCircle(
+  start: Position,
+  end: Position,
+): GreatCircleInterpolator {
+  const radians = Math.PI / 180;
+  const degrees = 180 / Math.PI;
+  const x0 = start[0] * radians;
+  const y0 = start[1] * radians;
+  const x1 = end[0] * radians;
+  const y1 = end[1] * radians;
+  const cy0 = Math.cos(y0);
+  const sy0 = Math.sin(y0);
+  const cy1 = Math.cos(y1);
+  const sy1 = Math.sin(y1);
+  const kx0 = cy0 * Math.cos(x0);
+  const ky0 = cy0 * Math.sin(x0);
+  const kx1 = cy1 * Math.cos(x1);
+  const ky1 = cy1 * Math.sin(x1);
+  const haversin = (value: number) => Math.sin(value / 2) ** 2;
+  const asin = (value: number) =>
+    value > 1 ? Math.PI / 2 : value < -1 ? -Math.PI / 2 : Math.asin(value);
+  const distance = 2 * asin(Math.sqrt(
+    haversin(y1 - y0) + cy0 * cy1 * haversin(x1 - x0),
+  ));
+  const k = Math.sin(distance);
+
+  const interpolate = (distance
+    ? (t: number): Position => {
+      const b = Math.sin(t * distance) / k;
+      const a = Math.sin(distance - t * distance) / k;
+      const x = a * kx0 + b * kx1;
+      const y = a * ky0 + b * ky1;
+      const z = a * sy0 + b * sy1;
+
+      return [
+        Math.atan2(y, x) * degrees,
+        Math.atan2(z, Math.sqrt(x * x + y * y)) * degrees,
+      ];
+    }
+    : (): Position => [start[0], start[1]]) as GreatCircleInterpolator;
+
+  interpolate.distance = distance;
+  return interpolate;
+}
 
 function vertexLine(
   x: number,
@@ -81,9 +130,12 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
   for (let index = 1; index < line.length; index += 1) {
     const start = line[index - 1];
     const end = line[index];
-    const distance = geoDistance(start, end) * (180 / Math.PI);
-    const segments = Math.max(1, Math.ceil(distance / maxSegmentLength));
-    const interpolate = geoInterpolate(start, end);
+    const interpolate = interpolateGreatCircle(start, end);
+    const distanceDegrees = interpolate.distance * (180 / Math.PI);
+    const segments = Math.max(
+      1,
+      Math.ceil(distanceDegrees / maxSegmentLength),
+    );
 
     for (let segment = 1; segment <= segments; segment += 1) {
       densified.push(interpolate(segment / segments) as Position);

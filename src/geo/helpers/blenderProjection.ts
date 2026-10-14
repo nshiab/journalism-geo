@@ -11,11 +11,19 @@ export type GeoJsonGeometry =
 
 export type GeoJsonObject =
   | GeoJsonGeometry
-  | { type: "Feature"; geometry: GeoJsonGeometry | null }
   | {
-    type: "FeatureCollection";
-    features: { geometry: GeoJsonGeometry | null }[];
-  };
+      type: "Feature";
+      geometry: GeoJsonGeometry | null;
+      properties?: unknown;
+    }
+  | {
+      type: "FeatureCollection";
+      features: {
+        type?: unknown;
+        geometry: GeoJsonGeometry | null;
+        properties?: unknown;
+      }[];
+    };
 
 /**
  * Closes a polygon ring by repeating its first coordinate at the end when it is
@@ -40,7 +48,7 @@ function closeRing(ring: Position[]): Position[] {
 export function getLines(geojson: GeoJsonObject): Position[][] {
   if (geojson.type === "FeatureCollection") {
     return geojson.features.flatMap((feature) =>
-      feature.geometry ? getLines(feature.geometry) : []
+      feature.geometry ? getLines(feature.geometry) : [],
     );
   }
 
@@ -95,4 +103,77 @@ export function projectFlatCoordinate(
 
   const [x, y] = projected;
   return [roundValue(x, decimals), roundValue(-y, decimals), 0];
+}
+
+function isPosition(value: unknown): value is Position {
+  return (
+    Array.isArray(value) &&
+    (value.length === 2 || value.length === 3) &&
+    value.every((coordinate: unknown) => typeof coordinate === "number")
+  );
+}
+
+function isPositions(value: unknown): value is Position[] {
+  return Array.isArray(value) && value.every(isPosition);
+}
+
+function isRings(value: unknown): value is Position[][] {
+  return Array.isArray(value) && value.every(isPositions);
+}
+
+function isGeometry(value: unknown): value is GeoJsonGeometry {
+  if (typeof value !== "object" || value === null || !("type" in value)) return false;
+  if (value.type === "GeometryCollection") {
+    return (
+      "geometries" in value && Array.isArray(value.geometries) && value.geometries.every(isGeometry)
+    );
+  }
+  if (!("coordinates" in value)) return false;
+  switch (value.type) {
+    case "Point":
+      return isPosition(value.coordinates);
+    case "MultiPoint":
+    case "LineString":
+      return isPositions(value.coordinates);
+    case "MultiLineString":
+    case "Polygon":
+      return isRings(value.coordinates);
+    case "MultiPolygon":
+      return Array.isArray(value.coordinates) && value.coordinates.every(isRings);
+    default:
+      return false;
+  }
+}
+
+function isFeatureGeometry(value: unknown): value is { geometry: GeoJsonGeometry | null } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "geometry" in value &&
+    (value.geometry === null || isGeometry(value.geometry))
+  );
+}
+
+function isFeature(value: unknown): value is Extract<GeoJsonObject, { type: "Feature" }> {
+  return isFeatureGeometry(value) && "type" in value && value.type === "Feature";
+}
+
+function isGeoJson(value: unknown): value is GeoJsonObject {
+  if (isFeature(value) || isGeometry(value)) return true;
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    value.type === "FeatureCollection" &&
+    "features" in value &&
+    Array.isArray(value.features) &&
+    value.features.every(isFeatureGeometry)
+  );
+}
+
+export function parseGeoJson(text: string): GeoJsonObject {
+  const value: unknown = JSON.parse(text);
+  if (!isGeoJson(value))
+    throw new TypeError("Expected a GeoJSON geometry, feature, or feature collection.");
+  return value;
 }

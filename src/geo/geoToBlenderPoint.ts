@@ -1,17 +1,24 @@
 import geoTo3D from "./geoTo3D.ts";
 import { projectFlatCoordinate } from "./helpers/blenderProjection.ts";
 
-/** A pre-fitted flat projection that converts longitude/latitude coordinates to x/y coordinates. */
+/**
+ * A pre-fitted flat projection that converts longitude/latitude coordinates to x/y coordinates.
+ * @category Geo
+ */
 export type GeoToBlenderPointFlatProjection = (
   coordinates: [number, number],
 ) => [number, number] | null;
 
-/** A projection function or `"orthographic"` for a 3D globe point. */
-export type GeoToBlenderPointProjection =
-  | "orthographic"
-  | GeoToBlenderPointFlatProjection;
+/**
+ * A projection function or `"orthographic"` for a 3D globe point.
+ * @category Geo
+ */
+export type GeoToBlenderPointProjection = "orthographic" | GeoToBlenderPointFlatProjection;
 
-/** Options for converting one longitude/latitude coordinate into Blender coordinates. */
+/**
+ * Options for converting one longitude/latitude coordinate into Blender coordinates.
+ * @category Geo
+ */
 export type GeoToBlenderPointOptions = {
   /**
    * For `"orthographic"`, the radius of the sphere in Blender units.
@@ -35,17 +42,12 @@ export type GeoToBlenderPointOptions = {
  * Flat projection functions are placed on Blender's X/Y plane with Z up and north toward positive Y.
  * The `"orthographic"` projection exports the coordinate in 3D on a sphere using `geoTo3D`.
  *
- * When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON through {@link rewind} first. Many data sources wind their polygons the wrong way for `d3-geo`, which makes the fit collapse to a near-zero scale and places every point at nearly the same spot. Use the same fitted projection here as the one passed to `geoToBlender` so the point lines up with the borders.
- *
- * @param lon - The longitude of the geographical point, in degrees.
- * @param lat - The latitude of the geographical point, in degrees.
- * @param projection - A flat projection function or `"orthographic"` for a 3D globe point.
- * @param options - Optional settings for orthographic radius, coordinate rounding, and return shape.
- * @returns Blender coordinates.
+ * When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON through `rewind` from `@nshiab/journalism-dataviz` first. Many data sources wind their polygons the wrong way for `d3-geo`, which makes the fit collapse to a near-zero scale and places every point at nearly the same spot. Use the same fitted projection here as the one passed to `geoToBlender` so the point lines up with the borders.
  *
  * @example
  * ```ts
- * import { geoToBlenderPoint, rewind } from "@nshiab/journalism-geo";
+ * import { geoToBlenderPoint } from "@nshiab/journalism-geo";
+ * import { rewind } from "@nshiab/journalism-dataviz";
  * import { geoConicConformal } from "d3-geo";
  * import { readFile } from "node:fs/promises";
  *
@@ -59,14 +61,18 @@ export type GeoToBlenderPointOptions = {
  *   decimals: 3,
  * });
  * ```
+ * @param lon - The longitude of the geographical point, in degrees.
+ * @param lat - The latitude of the geographical point, in degrees.
+ * @param projection - A flat projection function or `"orthographic"` for a 3D globe point.
+ * @param options - Optional settings for orthographic radius, coordinate rounding, and return shape.
+ * @returns Blender coordinates.
+ *
  * @category Geo
  */
 export default function geoToBlenderPoint(
   lon: number,
   lat: number,
-  projection:
-    | "orthographic"
-    | ((coordinates: [number, number]) => [number, number] | null),
+  projection: "orthographic" | ((coordinates: [number, number]) => [number, number] | null),
   options?: {
     /**
      * For `"orthographic"`, the radius of the sphere in Blender units.
@@ -91,12 +97,6 @@ export default function geoToBlenderPoint(
  * Flat projection functions are placed on Blender's X/Y plane with Z up and north toward positive Y.
  * The `"orthographic"` projection exports the coordinate in 3D on a sphere using `geoTo3D`.
  *
- * @param lon - The longitude of the geographical point, in degrees.
- * @param lat - The latitude of the geographical point, in degrees.
- * @param projection - A flat projection function or `"orthographic"` for a 3D globe point.
- * @param options - Optional settings for orthographic radius, coordinate rounding, and return shape.
- * @returns Blender coordinates.
- *
  * @example
  * ```ts
  * import { geoToBlenderPoint } from "@nshiab/journalism-geo";
@@ -107,14 +107,18 @@ export default function geoToBlenderPoint(
  *   toArray: true,
  * });
  * ```
+ * @param lon - The longitude of the geographical point, in degrees.
+ * @param lat - The latitude of the geographical point, in degrees.
+ * @param projection - A flat projection function or `"orthographic"` for a 3D globe point.
+ * @param options - Optional settings for orthographic radius, coordinate rounding, and return shape.
+ * @returns Blender coordinates.
+ *
  * @category Geo
  */
 export default function geoToBlenderPoint(
   lon: number,
   lat: number,
-  projection:
-    | "orthographic"
-    | ((coordinates: [number, number]) => [number, number] | null),
+  projection: "orthographic" | ((coordinates: [number, number]) => [number, number] | null),
   options: {
     /**
      * For `"orthographic"`, the radius of the sphere in Blender units.
@@ -133,16 +137,10 @@ export default function geoToBlenderPoint(
   },
 ): [number, number, number];
 
-/**
- * Implementation signature for geoToBlenderPoint function.
- * @ignore
- */
 export default function geoToBlenderPoint(
   lon: number,
   lat: number,
-  projection:
-    | "orthographic"
-    | ((coordinates: [number, number]) => [number, number] | null),
+  projection: "orthographic" | ((coordinates: [number, number]) => [number, number] | null),
   options: {
     radius?: number;
     decimals?: number;
@@ -168,9 +166,7 @@ export default function geoToBlenderPoint(
   const point = projectFlatCoordinate(projection, lon, lat, options.decimals);
 
   if (point === null) {
-    throw new Error(
-      `Projection could not project coordinate [${lon}, ${lat}].`,
-    );
+    throw new Error(`Projection could not project coordinate [${lon}, ${lat}].`);
   }
 
   if (options.toArray) {

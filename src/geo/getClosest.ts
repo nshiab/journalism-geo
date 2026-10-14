@@ -8,10 +8,7 @@ function minIndex(values: number[]): number {
   for (let index = 0; index < values.length; index += 1) {
     const value = values[index];
 
-    if (
-      (min === undefined && value >= value) ||
-      (min !== undefined && min > value)
-    ) {
+    if ((min === undefined && !Number.isNaN(value)) || (min !== undefined && min > value)) {
       min = value;
       minIndex = index;
     }
@@ -146,10 +143,6 @@ export default function getClosest<T>(
   },
 ): T & { distance: number };
 
-/**
- * Implementation signature for getClosest function.
- * @ignore
- */
 export default function getClosest<T>(
   lon: number,
   lat: number,
@@ -178,10 +171,11 @@ export default function getClosest<T>(
       throw new Error("Cannot add distance property to non-object item");
     }
 
-    const result = { ...closest } as T & { distance?: number };
+    const result = { ...closest };
 
     if (
-      "properties" in result && typeof result.properties === "object" &&
+      "properties" in result &&
+      typeof result.properties === "object" &&
       result.properties !== null
     ) {
       result.properties = {
@@ -189,9 +183,9 @@ export default function getClosest<T>(
         distance: distances[distanceMinIndex],
       };
     } else {
-      result.distance = distances[distanceMinIndex];
+      return { ...result, distance: distances[distanceMinIndex] };
     }
-    return result as T & { distance: number; properties?: unknown };
+    return result;
   }
 
   return closest;

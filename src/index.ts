@@ -30,17 +30,6 @@ import getGeoTiffValues from "./geo/getGeoTiffValues.ts";
 // Exported from journalism-dataviz
 // import rewind from "./geo/rewind.ts";
 
-export type {
-  GeoToBlenderFlatProjection,
-  GeoToBlenderOptions,
-  GeoToBlenderProjection,
-} from "./geo/geoToBlender.ts";
-export type {
-  GeoToBlenderPointFlatProjection,
-  GeoToBlenderPointOptions,
-  GeoToBlenderPointProjection,
-} from "./geo/geoToBlenderPoint.ts";
-
 export {
   distance,
   geoTo3D,

@@ -5,12 +5,6 @@
 - [README](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/README.md): Installation, examples and usage.
 
 ## API
-- [GeoToBlenderFlatProjection](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/type-aliases/GeoToBlenderFlatProjection.md): GeoToBlenderFlatProjection type alias
-- [GeoToBlenderOptions](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/type-aliases/GeoToBlenderOptions.md): GeoToBlenderOptions type alias
-- [GeoToBlenderPointFlatProjection](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/type-aliases/GeoToBlenderPointFlatProjection.md): GeoToBlenderPointFlatProjection type alias
-- [GeoToBlenderPointOptions](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/type-aliases/GeoToBlenderPointOptions.md): GeoToBlenderPointOptions type alias
-- [GeoToBlenderPointProjection](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/type-aliases/GeoToBlenderPointProjection.md): GeoToBlenderPointProjection type alias
-- [GeoToBlenderProjection](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/type-aliases/GeoToBlenderProjection.md): GeoToBlenderProjection type alias
 - [distance](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/functions/distance.md): distance function
 - [geoTo3D](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/functions/geoTo3D.md): geoTo3D function
 - [geoToBlender](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.24/docs/functions/geoToBlender.md): geoToBlender function

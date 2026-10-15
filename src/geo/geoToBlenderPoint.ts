@@ -2,41 +2,6 @@ import geoTo3D from "./geoTo3D.ts";
 import { projectFlatCoordinate } from "./helpers/blenderProjection.ts";
 
 /**
- * A pre-fitted flat projection that converts longitude/latitude coordinates to x/y coordinates.
- * @category Geo
- */
-export type GeoToBlenderPointFlatProjection = (
-  coordinates: [number, number],
-) => [number, number] | null;
-
-/**
- * A projection function or `"orthographic"` for a 3D globe point.
- * @category Geo
- */
-export type GeoToBlenderPointProjection = "orthographic" | GeoToBlenderPointFlatProjection;
-
-/**
- * Options for converting one longitude/latitude coordinate into Blender coordinates.
- * @category Geo
- */
-export type GeoToBlenderPointOptions = {
-  /**
-   * For `"orthographic"`, the radius of the sphere in Blender units.
-   * @default 10
-   */
-  radius?: number;
-  /**
-   * The number of decimal places to round coordinates to.
-   */
-  decimals?: number;
-  /**
-   * If `true`, the function returns `[x, y, z]` instead of `{ x, y, z }`.
-   * @default false
-   */
-  toArray?: boolean;
-};
-
-/**
  * Converts one longitude/latitude coordinate into Blender coordinates.
  *
  * Flat projection functions are placed on Blender's X/Y plane with Z up and north toward positive Y.

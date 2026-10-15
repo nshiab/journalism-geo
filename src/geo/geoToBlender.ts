@@ -8,39 +8,6 @@ import {
   roundValue,
 } from "./helpers/blenderProjection.ts";
 
-/**
- * A fitted flat projection that converts longitude/latitude coordinates to x/y coordinates.
- * @category Geo
- */
-export type GeoToBlenderFlatProjection = (coordinates: [number, number]) => [number, number] | null;
-
-/**
- * A projection function or `"orthographic"` for 3D globe borders.
- * @category Geo
- */
-export type GeoToBlenderProjection = "orthographic" | GeoToBlenderFlatProjection;
-
-/**
- * Options for converting GeoJSON borders into a Blender OBJ file.
- * @category Geo
- */
-export type GeoToBlenderOptions = {
-  /**
-   * For `"orthographic"`, the radius of the sphere in Blender units.
-   * @default 10
-   */
-  radius?: number;
-  /**
-   * The number of decimal places to round OBJ coordinates to.
-   */
-  decimals?: number;
-  /**
-   * The maximum angular distance, in degrees, between generated vertices for `"orthographic"`.
-   * By default, segments are not densified.
-   */
-  maxSegmentLength?: number;
-};
-
 type GreatCircleInterpolator = ((t: number) => Position) & {
   distance: number;
 };

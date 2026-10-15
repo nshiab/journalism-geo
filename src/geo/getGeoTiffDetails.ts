@@ -1,4 +1,4 @@
-import { fromFile } from "geotiff";
+import { fromFile, type GeoTIFFImage } from "geotiff";
 
 /**
  * Extracts detailed information from a GeoTIFF file, which can then be used with the `getGeoTiffValues` function.
@@ -23,8 +23,7 @@ import { fromFile } from "geotiff";
  * @category Geo
  */
 export default async function getGeoTiffDetails(path: string): Promise<{
-  // deno-lint-ignore no-explicit-any
-  image: any;
+  image: GeoTIFFImage;
   bbox: number[];
   pixelWidth: number;
   pixelHeight: number;

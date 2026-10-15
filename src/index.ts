@@ -3,11 +3,6 @@
  *
  * The Journalism library (geospatial functions)
  *
- * To install the library with Deno, use:
- * ```bash
- * deno add jsr:@nshiab/journalism-geo
- * ```
- *
  * To install the library with Node.js, use:
  * ```bash
  * npm i @nshiab/journalism-geo

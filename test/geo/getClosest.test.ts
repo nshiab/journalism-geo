@@ -1,4 +1,5 @@
-import { assertEquals } from "jsr:@std/assert";
+import { test } from "vite-plus/test";
+import { deepStrictEqual as assertEquals } from "node:assert/strict";
 import getClosest from "../../src/geo/getClosest.ts";
 
 const geoItems = [
@@ -7,7 +8,7 @@ const geoItems = [
 ];
 const ottawa = { lon: -75.71, lat: 45.37 };
 
-Deno.test("should return the closest city from Ottawa", () => {
+test("should return the closest city from Ottawa", () => {
   const closest = getClosest(
     ottawa.lon,
     ottawa.lat,
@@ -21,7 +22,7 @@ Deno.test("should return the closest city from Ottawa", () => {
     lat: 45.51,
   });
 });
-Deno.test("should return the closest city from Ottawa with the distance in km in the returned object", () => {
+test("should return the closest city from Ottawa with the distance in km in the returned object", () => {
   const closest = getClosest(
     ottawa.lon,
     ottawa.lat,
@@ -37,7 +38,7 @@ Deno.test("should return the closest city from Ottawa with the distance in km in
     distance: 160.6937083445315,
   });
 });
-Deno.test("should return the closest city from Ottawa with the rounded distance in km in the returned object", () => {
+test("should return the closest city from Ottawa with the rounded distance in km in the returned object", () => {
   const closest = getClosest(
     ottawa.lon,
     ottawa.lat,
@@ -53,7 +54,7 @@ Deno.test("should return the closest city from Ottawa with the rounded distance 
     distance: 161,
   });
 });
-Deno.test("should return the closest city from Ottawa with the distance in km with 3 decimals in the returned object", () => {
+test("should return the closest city from Ottawa with the distance in km with 3 decimals in the returned object", () => {
   const closest = getClosest(
     ottawa.lon,
     ottawa.lat,
@@ -69,7 +70,7 @@ Deno.test("should return the closest city from Ottawa with the distance in km wi
     distance: 160.694,
   });
 });
-Deno.test("should return the closest city from Ottawa with the distance in km with 3 decimals in the properties key.", () => {
+test("should return the closest city from Ottawa with the distance in km with 3 decimals in the properties key.", () => {
   const geoItemsWithProperties = [
     { name: "Montreal", lon: -73.66, lat: 45.51, properties: {} },
     { name: "Toronto", lon: -79.43, lat: 43.66, properties: {} },

@@ -1,24 +1,29 @@
 import { readFile, writeFile } from "node:fs/promises";
 import geoTo3D from "./geoTo3D.ts";
 import {
-  type GeoJsonObject,
+  parseGeoJson,
   getLines,
   type Position,
   projectFlatCoordinate,
   roundValue,
 } from "./helpers/blenderProjection.ts";
 
-/** A fitted flat projection that converts longitude/latitude coordinates to x/y coordinates. */
-export type GeoToBlenderFlatProjection = (
-  coordinates: [number, number],
-) => [number, number] | null;
+/**
+ * A fitted flat projection that converts longitude/latitude coordinates to x/y coordinates.
+ * @category Geo
+ */
+export type GeoToBlenderFlatProjection = (coordinates: [number, number]) => [number, number] | null;
 
-/** A projection function or `"orthographic"` for 3D globe borders. */
-export type GeoToBlenderProjection =
-  | "orthographic"
-  | GeoToBlenderFlatProjection;
+/**
+ * A projection function or `"orthographic"` for 3D globe borders.
+ * @category Geo
+ */
+export type GeoToBlenderProjection = "orthographic" | GeoToBlenderFlatProjection;
 
-/** Options for converting GeoJSON borders into a Blender OBJ file. */
+/**
+ * Options for converting GeoJSON borders into a Blender OBJ file.
+ * @category Geo
+ */
 export type GeoToBlenderOptions = {
   /**
    * For `"orthographic"`, the radius of the sphere in Blender units.
@@ -41,10 +46,7 @@ type GreatCircleInterpolator = ((t: number) => Position) & {
 };
 
 // Adapted from d3-geo's spherical great-circle interpolation.
-function interpolateGreatCircle(
-  start: Position,
-  end: Position,
-): GreatCircleInterpolator {
+function interpolateGreatCircle(start: Position, end: Position): GreatCircleInterpolator {
   const radians = Math.PI / 180;
   const degrees = 180 / Math.PI;
   const x0 = start[0] * radians;
@@ -62,39 +64,26 @@ function interpolateGreatCircle(
   const haversin = (value: number) => Math.sin(value / 2) ** 2;
   const asin = (value: number) =>
     value > 1 ? Math.PI / 2 : value < -1 ? -Math.PI / 2 : Math.asin(value);
-  const distance = 2 * asin(Math.sqrt(
-    haversin(y1 - y0) + cy0 * cy1 * haversin(x1 - x0),
-  ));
+  const distance = 2 * asin(Math.sqrt(haversin(y1 - y0) + cy0 * cy1 * haversin(x1 - x0)));
   const k = Math.sin(distance);
 
-  const interpolate = (distance
+  const interpolate = distance
     ? (t: number): Position => {
-      const b = Math.sin(t * distance) / k;
-      const a = Math.sin(distance - t * distance) / k;
-      const x = a * kx0 + b * kx1;
-      const y = a * ky0 + b * ky1;
-      const z = a * sy0 + b * sy1;
+        const b = Math.sin(t * distance) / k;
+        const a = Math.sin(distance - t * distance) / k;
+        const x = a * kx0 + b * kx1;
+        const y = a * ky0 + b * ky1;
+        const z = a * sy0 + b * sy1;
 
-      return [
-        Math.atan2(y, x) * degrees,
-        Math.atan2(z, Math.sqrt(x * x + y * y)) * degrees,
-      ];
-    }
-    : (): Position => [start[0], start[1]]) as GreatCircleInterpolator;
+        return [Math.atan2(y, x) * degrees, Math.atan2(z, Math.sqrt(x * x + y * y)) * degrees];
+      }
+    : (): Position => [start[0], start[1]];
 
-  interpolate.distance = distance;
-  return interpolate;
+  return Object.assign(interpolate, { distance });
 }
 
-function vertexLine(
-  x: number,
-  y: number,
-  z: number,
-  decimals?: number,
-): string {
-  return `v ${roundValue(x, decimals)} ${roundValue(y, decimals)} ${
-    roundValue(z, decimals)
-  }`;
+function vertexLine(x: number, y: number, z: number, decimals?: number): string {
+  return `v ${roundValue(x, decimals)} ${roundValue(y, decimals)} ${roundValue(z, decimals)}`;
 }
 
 function toObj(lines: [number, number, number][][], decimals?: number): string {
@@ -132,13 +121,10 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
     const end = line[index];
     const interpolate = interpolateGreatCircle(start, end);
     const distanceDegrees = interpolate.distance * (180 / Math.PI);
-    const segments = Math.max(
-      1,
-      Math.ceil(distanceDegrees / maxSegmentLength),
-    );
+    const segments = Math.max(1, Math.ceil(distanceDegrees / maxSegmentLength));
 
     for (let segment = 1; segment <= segments; segment += 1) {
-      densified.push(interpolate(segment / segments) as Position);
+      densified.push(interpolate(segment / segments));
     }
   }
 
@@ -154,17 +140,12 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  * The `"orthographic"` projection exports borders in 3D on a sphere using `geoTo3D`.
  * Set `maxSegmentLength` to add extra vertices along long orthographic segments.
  *
- * When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON through {@link rewind} first. Many data sources wind their polygons the wrong way for `d3-geo`, which makes the fit collapse to a near-zero scale and produces an empty-looking OBJ.
- *
- * @param geojsonPath - The path to the GeoJSON file to convert.
- * @param projection - A flat projection function or `"orthographic"` for 3D globe borders.
- * @param outputPath - The path where the OBJ file will be written.
- * @param options - Optional settings for orthographic radius, coordinate rounding, and orthographic segment densification.
- * @returns A Promise that resolves to the output path.
+ * When fitting a flat projection with `fitExtent`/`fitSize`, run the GeoJSON through `rewind` from `@nshiab/journalism-dataviz` first. Many data sources wind their polygons the wrong way for `d3-geo`, which makes the fit collapse to a near-zero scale and produces an empty-looking OBJ.
  *
  * @example
  * ```ts
- * import { geoToBlender, rewind } from "@nshiab/journalism-geo";
+ * import { geoToBlender } from "@nshiab/journalism-geo";
+ * import { rewind } from "@nshiab/journalism-dataviz";
  * import { geoConicConformal } from "d3-geo";
  * import { readFile } from "node:fs/promises";
  *
@@ -179,13 +160,17 @@ function densifyLine(line: Position[], maxSegmentLength: number): Position[] {
  *   decimals: 3,
  * });
  * ```
+ * @param geojsonPath - The path to the GeoJSON file to convert.
+ * @param projection - A flat projection function or `"orthographic"` for 3D globe borders.
+ * @param outputPath - The path where the OBJ file will be written.
+ * @param options - Optional settings for orthographic radius, coordinate rounding, and orthographic segment densification.
+ * @returns A Promise that resolves to the output path.
+ *
  * @category Geo
  */
 export default async function geoToBlender(
   geojsonPath: string,
-  projection:
-    | "orthographic"
-    | ((coordinates: [number, number]) => [number, number] | null),
+  projection: "orthographic" | ((coordinates: [number, number]) => [number, number] | null),
   outputPath: string,
   options: {
     /**
@@ -205,9 +190,7 @@ export default async function geoToBlender(
   } = {},
 ): Promise<string> {
   const radius = options.radius ?? 10;
-  const geojson = JSON.parse(
-    await readFile(geojsonPath, "utf8"),
-  ) as GeoJsonObject;
+  const geojson = parseGeoJson(await readFile(geojsonPath, "utf8"));
   const lines = getLines(geojson);
 
   let objLines: [number, number, number][][];
@@ -216,29 +199,25 @@ export default async function geoToBlender(
     objLines = lines.map((line) =>
       (typeof options.maxSegmentLength === "number"
         ? densifyLine(line, options.maxSegmentLength)
-        : line).map(([lon, lat]) =>
-          geoTo3D(lon, lat, radius, {
-            decimals: options.decimals,
-            toArray: true,
-          })
-        )
+        : line
+      ).map(([lon, lat]) =>
+        geoTo3D(lon, lat, radius, {
+          decimals: options.decimals,
+          toArray: true,
+        }),
+      ),
     );
   } else {
     objLines = lines.map((line) =>
       line.flatMap(([lon, lat]) => {
-        const projected = projectFlatCoordinate(
-          projection,
-          lon,
-          lat,
-          options.decimals,
-        );
+        const projected = projectFlatCoordinate(projection, lon, lat, options.decimals);
 
         if (projected === null) {
           return [];
         }
 
         return [projected];
-      })
+      }),
     );
   }
 

@@ -123,10 +123,6 @@ export default function geoTo3D(
  * ```
  * @category Geo
  */
-/**
- * Implementation signature for geoTo3D function.
- * @ignore
- */
 export default function geoTo3D(
   lon: number,
   lat: number,

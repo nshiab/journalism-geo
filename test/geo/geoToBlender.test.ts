@@ -1,4 +1,8 @@
-import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert";
+import { mkdir, mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test, afterAll, expect } from "vite-plus/test";
+import { ok as assert, deepStrictEqual as assertEquals } from "node:assert/strict";
 import {
   geoAlbers,
   geoAlbersUsa,
@@ -15,13 +19,16 @@ import geoToBlender from "../../src/geo/geoToBlender.ts";
 import rewind from "../../src/geo/rewind.ts";
 import {
   type GeoJsonObject,
+  type GeoJsonGeometry,
   getLines,
+  parseGeoJson,
 } from "../../src/geo/helpers/blenderProjection.ts";
 
-const outputDir = "test/output/geoToBlender";
+const outputDir = await mkdtemp(join(tmpdir(), "journalism-geoToBlender-"));
+afterAll(() => rm(outputDir, { recursive: true, force: true }));
 const provincesPath = "test/data/lpr_000b21a_e.json";
 
-const flatProjections = {
+const flatProjections: Record<string, () => ReturnType<typeof geoMercator>> = {
   albers: geoAlbers,
   albersUsa: geoAlbersUsa,
   conicConformal: geoConicConformal,
@@ -32,68 +39,74 @@ const flatProjections = {
   mercator: geoMercator,
   naturalEarth1: geoNaturalEarth1,
   transverseMercator: geoTransverseMercator,
-} as const;
+};
 
-const squareCoordinates: [number, number][][] = [[
-  [-1, -1],
-  [1, -1],
-  [1, 1],
-  [-1, 1],
-  [-1, -1],
-]];
+const squareCoordinates: [number, number][][] = [
+  [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+  ],
+];
 
-const usSquareCoordinates: [number, number][][] = [[
-  [-101, 39],
-  [-99, 39],
-  [-99, 41],
-  [-101, 41],
-  [-101, 39],
-]];
+const usSquareCoordinates: [number, number][][] = [
+  [
+    [-101, 39],
+    [-99, 39],
+    [-99, 41],
+    [-101, 41],
+    [-101, 39],
+  ],
+];
 
-const rotatedSquareCoordinates: [number, number][][] = [[
-  [0, 40],
-  [10, 40],
-  [10, 50],
-  [0, 50],
-  [0, 40],
-]];
+const rotatedSquareCoordinates: [number, number][][] = [
+  [
+    [0, 40],
+    [10, 40],
+    [10, 50],
+    [0, 50],
+    [0, 40],
+  ],
+];
 
-const square = {
-  type: "FeatureCollection" as const,
+const square: GeoJsonObject = {
+  type: "FeatureCollection",
   features: [
     {
-      type: "Feature" as const,
+      type: "Feature",
       properties: {},
       geometry: {
-        type: "Polygon" as const,
+        type: "Polygon",
         coordinates: squareCoordinates,
       },
     },
   ],
 };
 
-const usSquare = {
-  type: "FeatureCollection" as const,
+const usSquare: GeoJsonObject = {
+  type: "FeatureCollection",
   features: [
     {
-      type: "Feature" as const,
+      type: "Feature",
       properties: {},
       geometry: {
-        type: "Polygon" as const,
+        type: "Polygon",
         coordinates: usSquareCoordinates,
       },
     },
   ],
 };
 
-const rotatedSquare = {
-  type: "FeatureCollection" as const,
+const rotatedSquare: GeoJsonObject = {
+  type: "FeatureCollection",
   features: [
     {
-      type: "Feature" as const,
+      type: "Feature",
       properties: {},
       geometry: {
-        type: "Polygon" as const,
+        type: "Polygon",
         coordinates: rotatedSquareCoordinates,
       },
     },
@@ -111,19 +124,22 @@ function fitGeoJsonProjection(
     projection.rotate(rotate);
   }
 
-  return projection.fitExtent([[-5, -5], [5, 5]], {
-    type: "MultiLineString",
-    coordinates: getLines(geojson),
-  });
+  return projection.fitExtent(
+    [
+      [-5, -5],
+      [5, 5],
+    ],
+    {
+      type: "MultiLineString",
+      coordinates: getLines(geojson),
+    },
+  );
 }
 
-async function writeGeoJson(
-  name: string,
-  geojson: typeof square = square,
-): Promise<string> {
-  await Deno.mkdir(outputDir, { recursive: true });
+async function writeGeoJson(name: string, geojson: GeoJsonObject = square): Promise<string> {
+  await mkdir(outputDir, { recursive: true });
   const path = `${outputDir}/${name}.geojson`;
-  await Deno.writeTextFile(path, JSON.stringify(geojson));
+  await writeFile(path, JSON.stringify(geojson));
   return path;
 }
 
@@ -143,125 +159,106 @@ function vertexRange(obj: string, axis: 0 | 1 | 2): number {
 }
 
 function countObjRecords(obj: string, record: "v" | "l"): number {
-  return obj.split("\n")
-    .filter((line) => line.startsWith(`${record} `)).length;
+  return obj.split("\n").filter((line) => line.startsWith(`${record} `)).length;
 }
 
-for (
-  const projectionName of Object.keys(flatProjections) as Array<
-    keyof typeof flatProjections
-  >
-) {
-  Deno.test(`should write ${projectionName} GeoJSON borders to an OBJ file`, async () => {
+for (const projectionName of Object.keys(flatProjections)) {
+  if (!(projectionName in flatProjections)) throw new Error("Unknown projection");
+  test(`should write ${projectionName} GeoJSON borders to an OBJ file`, async () => {
     const geojson = projectionName === "albersUsa" ? usSquare : square;
     const geojsonPath = await writeGeoJson(`square-${projectionName}`, geojson);
     const outputPath = `${outputDir}/square-${projectionName}.obj`;
 
     const result = await geoToBlender(
       geojsonPath,
-      fitGeoJsonProjection(
-        projectionName,
-        geojson,
-      ),
+      fitGeoJsonProjection(projectionName, geojson),
       outputPath,
       {
         decimals: 3,
       },
     );
-    const obj = await Deno.readTextFile(outputPath);
+    const obj = await readFile(outputPath, "utf8");
 
     assertEquals(result, outputPath);
-    assertStringIncludes(obj, "# Generated by @nshiab/journalism-geo\n");
-    assertStringIncludes(obj, "o borders\n");
-    assertStringIncludes(obj, "l 1 2 3 4 5\n");
-    assert(
-      Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
-    );
+    expect(obj).toContain("# Generated by @nshiab/journalism-geo\n");
+    expect(obj).toContain("o borders\n");
+    expect(obj).toContain("l 1 2 3 4 5\n");
+    assert(Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5);
   });
 }
 
-Deno.test("should close polygon rings that omit the repeated closing coordinate", async () => {
-  const openSquare = {
-    type: "FeatureCollection" as const,
+test("should close polygon rings that omit the repeated closing coordinate", async () => {
+  const openSquare: GeoJsonObject = {
+    type: "FeatureCollection",
     features: [
       {
-        type: "Feature" as const,
+        type: "Feature",
         properties: {},
         geometry: {
-          type: "Polygon" as const,
+          type: "Polygon",
           // Last coordinate intentionally omitted, so the ring is left open.
-          coordinates: [[
-            [-1, -1],
-            [1, -1],
-            [1, 1],
-            [-1, 1],
-          ]] as [number, number][][],
+          coordinates: [
+            [
+              [-1, -1],
+              [1, -1],
+              [1, 1],
+              [-1, 1],
+            ],
+          ],
         },
       },
     ],
   };
 
-  const geojsonPath = await writeGeoJson(
-    "square-open-ring",
-    openSquare as unknown as typeof square,
-  );
+  const geojsonPath = await writeGeoJson("square-open-ring", openSquare);
   const outputPath = `${outputDir}/square-open-ring.obj`;
 
-  await geoToBlender(
-    geojsonPath,
-    fitGeoJsonProjection("mercator", openSquare as unknown as GeoJsonObject),
-    outputPath,
-    { decimals: 3 },
-  );
-  const obj = await Deno.readTextFile(outputPath);
+  await geoToBlender(geojsonPath, fitGeoJsonProjection("mercator", openSquare), outputPath, {
+    decimals: 3,
+  });
+  const obj = await readFile(outputPath, "utf8");
 
   // The four input vertices plus the appended closing vertex form a loop.
   assertEquals(countObjRecords(obj, "v"), 5);
-  assertStringIncludes(obj, "l 1 2 3 4 5\n");
+  expect(obj).toContain("l 1 2 3 4 5\n");
 
   const vertices = obj.split("\n").filter((line) => line.startsWith("v "));
   assertEquals(vertices[0], vertices[4]);
 });
 
-Deno.test("should leave open LineString borders open", async () => {
-  const openLine = {
-    type: "FeatureCollection" as const,
+test("should leave open LineString borders open", async () => {
+  const openLine: GeoJsonObject = {
+    type: "FeatureCollection",
     features: [
       {
-        type: "Feature" as const,
+        type: "Feature",
         properties: {},
         geometry: {
-          type: "LineString" as const,
+          type: "LineString",
           coordinates: [
             [-1, -1],
             [1, -1],
             [1, 1],
-          ] as [number, number][],
+          ],
         },
       },
     ],
   };
 
-  const geojsonPath = await writeGeoJson(
-    "open-line",
-    openLine as unknown as typeof square,
-  );
+  const geojsonPath = await writeGeoJson("open-line", openLine);
   const outputPath = `${outputDir}/open-line.obj`;
 
-  await geoToBlender(
-    geojsonPath,
-    fitGeoJsonProjection("mercator", openLine as unknown as GeoJsonObject),
-    outputPath,
-    { decimals: 3 },
-  );
-  const obj = await Deno.readTextFile(outputPath);
+  await geoToBlender(geojsonPath, fitGeoJsonProjection("mercator", openLine), outputPath, {
+    decimals: 3,
+  });
+  const obj = await readFile(outputPath, "utf8");
 
   // No closing vertex is appended to a LineString.
   assertEquals(countObjRecords(obj, "v"), 3);
-  assertStringIncludes(obj, "l 1 2 3\n");
+  expect(obj).toContain("l 1 2 3\n");
 });
 
-Deno.test("should write orthographic GeoJSON borders as 3D vertices", async () => {
+test("should write orthographic GeoJSON borders as 3D vertices", async () => {
   const geojsonPath = await writeGeoJson("square-orthographic");
   const outputPath = `${outputDir}/square-orthographic.obj`;
 
@@ -269,13 +266,13 @@ Deno.test("should write orthographic GeoJSON borders as 3D vertices", async () =
     radius: 1,
     decimals: 3,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
-  assertStringIncludes(obj, "v -0.017 -0.017 1\n");
-  assertStringIncludes(obj, "l 1 2 3 4 5\n");
+  expect(obj).toContain("v -0.017 -0.017 1\n");
+  expect(obj).toContain("l 1 2 3 4 5\n");
 });
 
-Deno.test("should densify orthographic border segments when requested", async () => {
+test("should densify orthographic border segments when requested", async () => {
   const geojsonPath = await writeGeoJson("square-orthographic-densified");
   const outputPath = `${outputDir}/square-orthographic-densified.obj`;
 
@@ -284,12 +281,12 @@ Deno.test("should densify orthographic border segments when requested", async ()
     decimals: 3,
     maxSegmentLength: 1,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
-  assertStringIncludes(obj, "l 1 2 3 4 5 6 7 8 9\n");
+  expect(obj).toContain("l 1 2 3 4 5 6 7 8 9\n");
 });
 
-Deno.test("should allow explicitly longer orthographic border segments", async () => {
+test("should allow explicitly longer orthographic border segments", async () => {
   const geojsonPath = await writeGeoJson("square-orthographic-long-segments");
   const outputPath = `${outputDir}/square-orthographic-long-segments.obj`;
 
@@ -298,22 +295,19 @@ Deno.test("should allow explicitly longer orthographic border segments", async (
     decimals: 3,
     maxSegmentLength: 10,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
-  assertStringIncludes(obj, "l 1 2 3 4 5\n");
+  expect(obj).toContain("l 1 2 3 4 5\n");
 });
 
-Deno.test("should rotate flat projections when requested", async () => {
+test("should rotate flat projections when requested", async () => {
   const geojsonPath = await writeGeoJson("square-rotated", rotatedSquare);
   const unrotatedPath = `${outputDir}/square-conicConformal-unrotated.obj`;
   const rotatedPath = `${outputDir}/square-conicConformal-rotated.obj`;
 
   await geoToBlender(
     geojsonPath,
-    fitGeoJsonProjection(
-      "conicConformal",
-      rotatedSquare,
-    ),
+    fitGeoJsonProjection("conicConformal", rotatedSquare),
     unrotatedPath,
     {
       decimals: 3,
@@ -321,61 +315,47 @@ Deno.test("should rotate flat projections when requested", async () => {
   );
   await geoToBlender(
     geojsonPath,
-    fitGeoJsonProjection(
-      "conicConformal",
-      rotatedSquare,
-      [100, -60],
-    ),
+    fitGeoJsonProjection("conicConformal", rotatedSquare, [100, -60]),
     rotatedPath,
     {
       decimals: 3,
     },
   );
 
-  const unrotated = await Deno.readTextFile(unrotatedPath);
-  const rotated = await Deno.readTextFile(rotatedPath);
+  const unrotated = await readFile(unrotatedPath, "utf8");
+  const rotated = await readFile(rotatedPath, "utf8");
 
   assert(unrotated !== rotated);
-  assertStringIncludes(rotated, "v 5 -2.545 0\n");
+  expect(rotated).toContain("v 5 -2.545 0\n");
 });
 
-Deno.test("should write Canadian provinces and territories to an OBJ file", async () => {
-  await Deno.mkdir(outputDir, { recursive: true });
+test("should write Canadian provinces and territories to an OBJ file", async () => {
+  await mkdir(outputDir, { recursive: true });
   const outputPath = `${outputDir}/canada-provinces-territories.obj`;
 
-  const canadaGeoJson = JSON.parse(
-    await Deno.readTextFile(provincesPath),
-  ) as GeoJsonObject;
+  const canadaGeoJson = parseGeoJson(await readFile(provincesPath, "utf8"));
   const result = await geoToBlender(
     provincesPath,
-    fitGeoJsonProjection(
-      "mercator",
-      canadaGeoJson,
-    ),
+    fitGeoJsonProjection("mercator", canadaGeoJson),
     outputPath,
     {
       decimals: 3,
     },
   );
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
   assertEquals(result, outputPath);
-  assertStringIncludes(obj, "# Generated by @nshiab/journalism-geo\n");
-  assertStringIncludes(obj, "o borders\n");
+  expect(obj).toContain("# Generated by @nshiab/journalism-geo\n");
+  expect(obj).toContain("o borders\n");
   assert(countObjRecords(obj, "v") > 1000);
   assert(countObjRecords(obj, "l") > 100);
-  assert(
-    Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
-  );
+  assert(Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5);
 });
 
-Deno.test("should write Canadian provinces and territories to a conic conformal OBJ file", async () => {
-  await Deno.mkdir(outputDir, { recursive: true });
-  const outputPath =
-    `${outputDir}/canada-provinces-territories-conicConformal.obj`;
-  const canadaGeoJson = JSON.parse(
-    await Deno.readTextFile(provincesPath),
-  ) as GeoJsonObject;
+test("should write Canadian provinces and territories to a conic conformal OBJ file", async () => {
+  await mkdir(outputDir, { recursive: true });
+  const outputPath = `${outputDir}/canada-provinces-territories-conicConformal.obj`;
+  const canadaGeoJson = parseGeoJson(await readFile(provincesPath, "utf8"));
 
   const result = await geoToBlender(
     provincesPath,
@@ -385,45 +365,41 @@ Deno.test("should write Canadian provinces and territories to a conic conformal 
       decimals: 3,
     },
   );
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
   assertEquals(result, outputPath);
-  assertStringIncludes(obj, "# Generated by @nshiab/journalism-geo\n");
-  assertStringIncludes(obj, "o borders\n");
+  expect(obj).toContain("# Generated by @nshiab/journalism-geo\n");
+  expect(obj).toContain("o borders\n");
   assert(countObjRecords(obj, "v") > 1000);
   assert(countObjRecords(obj, "l") > 100);
-  assert(
-    Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5,
-  );
+  assert(Math.max(vertexRange(obj, 0), vertexRange(obj, 1)) > 5);
 });
 
-Deno.test("should collapse when a conic conformal is fitted to raw polygons instead of lines", async () => {
+test("should collapse when a conic conformal is fitted to raw polygons instead of lines", async () => {
   // Reproduces a real gotcha: fitting geoConicConformal directly to the
   // FeatureCollection (polygons) makes fitExtent measure the filled polygon
   // across the projection's pole singularity, blowing up the bounds and
   // crushing the scale to ~0.0015. Every coordinate collapses onto a single
   // point, so the OBJ is a degenerate dot and nothing shows up in Blender.
   // The fix is to fit to line geometry instead (see getLines / the test below).
-  await Deno.mkdir(outputDir, { recursive: true });
-  const outputPath =
-    `${outputDir}/canada-provinces-territories-conicConformal-collapsed.obj`;
-  const domain = JSON.parse(
-    await Deno.readTextFile(provincesPath),
-  ) as GeoJsonObject;
+  await mkdir(outputDir, { recursive: true });
+  const outputPath = `${outputDir}/canada-provinces-territories-conicConformal-collapsed.obj`;
+  const domain = parseGeoJson(await readFile(provincesPath, "utf8"));
 
   const projection = geoConicConformal()
     .rotate([100, -60])
     .fitExtent(
-      [[-5, -5], [5, 5]],
-      domain as Parameters<
-        ReturnType<typeof geoConicConformal>["fitExtent"]
-      >[1],
+      [
+        [-5, -5],
+        [5, 5],
+      ],
+      geometryDomain(domain),
     );
 
   await geoToBlender(provincesPath, projection, outputPath, {
     decimals: 3,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
   // Geometry is still written, it is just collapsed onto a single point.
   assert(countObjRecords(obj, "v") > 1000);
@@ -434,31 +410,29 @@ Deno.test("should collapse when a conic conformal is fitted to raw polygons inst
   );
 });
 
-Deno.test("should fit a conic conformal to raw polygons once they are rewound", async () => {
+test("should fit a conic conformal to raw polygons once they are rewound", async () => {
   // Same projection and fit as the collapse test above, but the polygons are
   // rewound first so their exterior rings follow d3-geo's right-hand rule.
   // fitExtent then measures the real extent and the geometry is laid out
   // correctly instead of collapsing.
-  await Deno.mkdir(outputDir, { recursive: true });
-  const outputPath =
-    `${outputDir}/canada-provinces-territories-conicConformal-rewound.obj`;
-  const domain = rewind(
-    JSON.parse(await Deno.readTextFile(provincesPath)) as GeoJsonObject,
-  );
+  await mkdir(outputDir, { recursive: true });
+  const outputPath = `${outputDir}/canada-provinces-territories-conicConformal-rewound.obj`;
+  const domain = rewind(parseGeoJson(await readFile(provincesPath, "utf8")));
 
   const projection = geoConicConformal()
     .rotate([100, -60])
     .fitExtent(
-      [[-5, -5], [5, 5]],
-      domain as Parameters<
-        ReturnType<typeof geoConicConformal>["fitExtent"]
-      >[1],
+      [
+        [-5, -5],
+        [5, 5],
+      ],
+      geometryDomain(domain),
     );
 
   const result = await geoToBlender(provincesPath, projection, outputPath, {
     decimals: 3,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
   assertEquals(result, outputPath);
   assert(countObjRecords(obj, "v") > 1000);
@@ -469,22 +443,56 @@ Deno.test("should fit a conic conformal to raw polygons once they are rewound", 
   );
 });
 
-Deno.test("should write Canadian provinces and territories to an orthographic OBJ file", async () => {
-  await Deno.mkdir(outputDir, { recursive: true });
-  const outputPath =
-    `${outputDir}/canada-provinces-territories-orthographic.obj`;
+test("should write Canadian provinces and territories to an orthographic OBJ file", async () => {
+  await mkdir(outputDir, { recursive: true });
+  const outputPath = `${outputDir}/canada-provinces-territories-orthographic.obj`;
 
   const result = await geoToBlender(provincesPath, "orthographic", outputPath, {
     radius: 10,
     decimals: 3,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
 
   assertEquals(result, outputPath);
-  assertStringIncludes(obj, "# Generated by @nshiab/journalism-geo\n");
-  assertStringIncludes(obj, "o borders\n");
+  expect(obj).toContain("# Generated by @nshiab/journalism-geo\n");
+  expect(obj).toContain("o borders\n");
   assert(countObjRecords(obj, "v") > 1000);
   assert(countObjRecords(obj, "l") > 100);
   assert(vertexRange(obj, 0) > 5);
   assert(vertexRange(obj, 2) > 5);
+});
+
+function geometryDomain(geojson: GeoJsonObject): GeoJsonGeometry {
+  if (geojson.type === "FeatureCollection") {
+    return {
+      type: "GeometryCollection",
+      geometries: geojson.features.flatMap(({ geometry }) => (geometry ? [geometry] : [])),
+    };
+  }
+  if (geojson.type === "Feature") {
+    return { type: "GeometryCollection", geometries: geojson.geometry ? [geojson.geometry] : [] };
+  }
+  return geojson;
+}
+
+test("should accept feature geometry without optional feature metadata", async () => {
+  const geometry: GeoJsonGeometry = {
+    type: "LineString",
+    coordinates: [
+      [-1, -1],
+      [1, 1],
+    ],
+  };
+  for (const [index, geojson] of [
+    { type: "Feature", geometry },
+    { type: "FeatureCollection", features: [{ geometry }] },
+  ].entries()) {
+    const inputPath = `${outputDir}/minimal-feature-${index}.geojson`;
+    const outputPath = `${outputDir}/minimal-feature-${index}.obj`;
+    await writeFile(inputPath, JSON.stringify(geojson));
+    await geoToBlender(inputPath, "orthographic", outputPath);
+    const obj = await readFile(outputPath, "utf8");
+    expect(countObjRecords(obj, "v")).toBe(2);
+    expect(obj).toContain("l 1 2\n");
+  }
 });

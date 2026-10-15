@@ -1,4 +1,13 @@
-import type { GeoTIFFImage } from "geotiff";
+function hasReadRasters(value: unknown): value is {
+  readRasters(options: { window: number[] }): unknown;
+} {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "readRasters" in value &&
+    typeof value.readRasters === "function"
+  );
+}
 
 /**
  * Extracts values at specific latitude and longitude coordinates from a GeoTIFF image. This function works in conjunction with the `getGeoTiffDetails` function, using the details returned by it.
@@ -40,23 +49,30 @@ export default async function getGeoTiffValues(
   | Float32Array
   | Float64Array
 > {
-  const { image, bbox, pixelWidth, pixelHeight, bboxWidth, bboxHeight } =
-    geoTiffDetails;
+  const { image, bbox, pixelWidth, pixelHeight, bboxWidth, bboxHeight } = geoTiffDetails;
 
   const widthPct = (lon - bbox[0]) / bboxWidth;
   const heightPct = (lat - bbox[1]) / bboxHeight;
   const xPx = Math.floor(pixelWidth * widthPct);
   const yPx = Math.floor(pixelHeight * (1 - heightPct));
   const window = [xPx, yPx, xPx + 1, yPx + 1];
-  const data = await (image as GeoTIFFImage).readRasters({ window });
+  if (!hasReadRasters(image)) {
+    throw new TypeError("Expected an image with a readRasters method.");
+  }
+  const data = await image.readRasters({ window });
 
-  return data[0] as
-    | Uint8Array
-    | Int8Array
-    | Uint16Array
-    | Int16Array
-    | Uint32Array
-    | Int32Array
-    | Float32Array
-    | Float64Array;
+  if (!Array.isArray(data)) throw new TypeError("Expected an array of raster bands.");
+  const band: unknown = data[0];
+  if (
+    band instanceof Uint8Array ||
+    band instanceof Int8Array ||
+    band instanceof Uint16Array ||
+    band instanceof Int16Array ||
+    band instanceof Uint32Array ||
+    band instanceof Int32Array ||
+    band instanceof Float32Array ||
+    band instanceof Float64Array
+  )
+    return band;
+  throw new TypeError("Expected a numeric raster band.");
 }

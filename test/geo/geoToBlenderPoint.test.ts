@@ -1,32 +1,41 @@
-import { assert, assertEquals, assertThrows } from "jsr:@std/assert";
+import { mkdir, mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test, afterAll, expect } from "vite-plus/test";
+import { ok as assert, deepStrictEqual as assertEquals } from "node:assert/strict";
 import { geoAlbersUsa, geoConicConformal, geoMercator } from "d3-geo";
 import geoToBlender from "../../src/geo/geoToBlender.ts";
 import geoToBlenderPoint from "../../src/geo/geoToBlenderPoint.ts";
 import rewind from "../../src/geo/rewind.ts";
 import {
   type GeoJsonObject,
+  type GeoJsonGeometry,
   getLines,
+  parseGeoJson,
 } from "../../src/geo/helpers/blenderProjection.ts";
 
-const outputDir = "test/output/geoToBlenderPoint";
+const outputDir = await mkdtemp(join(tmpdir(), "journalism-geoToBlenderPoint-"));
+afterAll(() => rm(outputDir, { recursive: true, force: true }));
 const provincesPath = "test/data/lpr_000b21a_e.json";
 
-const squareCoordinates: [number, number][][] = [[
-  [-1, -1],
-  [1, -1],
-  [1, 1],
-  [-1, 1],
-  [-1, -1],
-]];
+const squareCoordinates: [number, number][][] = [
+  [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+  ],
+];
 
-const square = {
-  type: "FeatureCollection" as const,
+const square: GeoJsonObject = {
+  type: "FeatureCollection",
   features: [
     {
-      type: "Feature" as const,
+      type: "Feature",
       properties: {},
       geometry: {
-        type: "Polygon" as const,
+        type: "Polygon",
         coordinates: squareCoordinates,
       },
     },
@@ -34,16 +43,22 @@ const square = {
 };
 
 function fitSquareProjection() {
-  return geoMercator().fitExtent([[-5, -5], [5, 5]], {
-    type: "MultiLineString",
-    coordinates: getLines(square),
-  });
+  return geoMercator().fitExtent(
+    [
+      [-5, -5],
+      [5, 5],
+    ],
+    {
+      type: "MultiLineString",
+      coordinates: getLines(square),
+    },
+  );
 }
 
 async function writeGeoJson(name: string): Promise<string> {
-  await Deno.mkdir(outputDir, { recursive: true });
+  await mkdir(outputDir, { recursive: true });
   const path = `${outputDir}/${name}.geojson`;
-  await Deno.writeTextFile(path, JSON.stringify(square));
+  await writeFile(path, JSON.stringify(square));
   return path;
 }
 
@@ -92,7 +107,7 @@ function vertexBounds(obj: string): {
   return bounds;
 }
 
-Deno.test("should convert orthographic coordinates to a Blender point", () => {
+test("should convert orthographic coordinates to a Blender point", () => {
   const point = geoToBlenderPoint(-1, -1, "orthographic", {
     radius: 1,
     decimals: 3,
@@ -101,7 +116,7 @@ Deno.test("should convert orthographic coordinates to a Blender point", () => {
   assertEquals(point, { x: -0.017, y: -0.017, z: 1 });
 });
 
-Deno.test("should return a Blender point as an array", () => {
+test("should return a Blender point as an array", () => {
   const point = geoToBlenderPoint(-1, -1, "orthographic", {
     radius: 1,
     decimals: 3,
@@ -111,7 +126,7 @@ Deno.test("should return a Blender point as an array", () => {
   assertEquals(point, [-0.017, -0.017, 1]);
 });
 
-Deno.test("should convert coordinates with a fitted flat projection", async () => {
+test("should convert coordinates with a fitted flat projection", async () => {
   const geojsonPath = await writeGeoJson("square");
   const outputPath = `${outputDir}/square.obj`;
 
@@ -119,7 +134,7 @@ Deno.test("should convert coordinates with a fitted flat projection", async () =
     decimals: 3,
   });
 
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
   const point = geoToBlenderPoint(-1, -1, fitSquareProjection(), {
     decimals: 3,
     toArray: true,
@@ -128,7 +143,7 @@ Deno.test("should convert coordinates with a fitted flat projection", async () =
   assertEquals(point, firstVertex(obj));
 });
 
-Deno.test("should place flat projection points on Blender's X/Y plane", () => {
+test("should place flat projection points on Blender's X/Y plane", () => {
   const point = geoToBlenderPoint(-1, -1, fitSquareProjection(), {
     decimals: 3,
   });
@@ -136,7 +151,7 @@ Deno.test("should place flat projection points on Blender's X/Y plane", () => {
   assertEquals(point, { x: -5, y: -5, z: 0 });
 });
 
-Deno.test("should convert points with a pre-fitted flat projection", () => {
+test("should convert points with a pre-fitted flat projection", () => {
   const projection = fitSquareProjection();
   const point = geoToBlenderPoint(-1, -1, projection, {
     decimals: 3,
@@ -146,7 +161,7 @@ Deno.test("should convert points with a pre-fitted flat projection", () => {
   assertEquals(point, [-5, -5, 0]);
 });
 
-Deno.test("should place northern flat projection points above southern points", () => {
+test("should place northern flat projection points above southern points", () => {
   const projection = fitSquareProjection();
   const south = geoToBlenderPoint(0, -1, projection);
   const north = geoToBlenderPoint(0, 1, projection);
@@ -154,21 +169,25 @@ Deno.test("should place northern flat projection points above southern points", 
   assert(north.y > south.y);
 });
 
-Deno.test("should place Canada points inside flat Blender boundary extents", async () => {
-  await Deno.mkdir(outputDir, { recursive: true });
+test("should place Canada points inside flat Blender boundary extents", async () => {
+  await mkdir(outputDir, { recursive: true });
   const outputPath = `${outputDir}/canada-provinces-territories.obj`;
 
-  const canadaGeoJson = JSON.parse(
-    await Deno.readTextFile(provincesPath),
-  ) as GeoJsonObject;
-  const projection = geoMercator().fitExtent([[-5, -5], [5, 5]], {
-    type: "MultiLineString",
-    coordinates: getLines(canadaGeoJson),
-  });
+  const canadaGeoJson = parseGeoJson(await readFile(provincesPath, "utf8"));
+  const projection = geoMercator().fitExtent(
+    [
+      [-5, -5],
+      [5, 5],
+    ],
+    {
+      type: "MultiLineString",
+      coordinates: getLines(canadaGeoJson),
+    },
+  );
   await geoToBlender(provincesPath, projection, outputPath, {
     decimals: 3,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
   const bounds = vertexBounds(obj);
   const point = geoToBlenderPoint(-75.6972, 45.4215, projection, {
     decimals: 3,
@@ -181,29 +200,28 @@ Deno.test("should place Canada points inside flat Blender boundary extents", asy
   assert(point.y >= bounds.minY && point.y <= bounds.maxY);
 });
 
-Deno.test("should place a point inside extents when fitting a conic conformal to rewound polygons", async () => {
+test("should place a point inside extents when fitting a conic conformal to rewound polygons", async () => {
   // Fitting geoConicConformal to the raw polygons collapses the projection to
   // a near-zero scale (see geoToBlender.test.ts). Rewinding the polygons first
   // gives a real extent, so the point and the borders share the same layout.
-  await Deno.mkdir(outputDir, { recursive: true });
+  await mkdir(outputDir, { recursive: true });
   const outputPath = `${outputDir}/canada-provinces-territories-rewound.obj`;
-  const domain = rewind(
-    JSON.parse(await Deno.readTextFile(provincesPath)) as GeoJsonObject,
-  );
+  const domain = rewind(parseGeoJson(await readFile(provincesPath, "utf8")));
 
   const projection = geoConicConformal()
     .rotate([100, -60])
     .fitExtent(
-      [[-5, -5], [5, 5]],
-      domain as Parameters<
-        ReturnType<typeof geoConicConformal>["fitExtent"]
-      >[1],
+      [
+        [-5, -5],
+        [5, 5],
+      ],
+      geometryDomain(domain),
     );
 
   await geoToBlender(provincesPath, projection, outputPath, {
     decimals: 3,
   });
-  const obj = await Deno.readTextFile(outputPath);
+  const obj = await readFile(outputPath, "utf8");
   const bounds = vertexBounds(obj);
   const point = geoToBlenderPoint(-75.6972, 45.4215, projection, {
     decimals: 3,
@@ -216,15 +234,32 @@ Deno.test("should place a point inside extents when fitting a conic conformal to
   assert(point.y >= bounds.minY && point.y <= bounds.maxY);
 });
 
-Deno.test("should throw when a flat projection cannot project the coordinate", () => {
-  const projection = geoAlbersUsa().fitExtent([[-5, -5], [5, 5]], {
-    type: "MultiLineString",
-    coordinates: getLines(square),
-  });
+test("should throw when a flat projection cannot project the coordinate", () => {
+  const projection = geoAlbersUsa().fitExtent(
+    [
+      [-5, -5],
+      [5, 5],
+    ],
+    {
+      type: "MultiLineString",
+      coordinates: getLines(square),
+    },
+  );
 
-  assertThrows(
-    () => geoToBlenderPoint(-1, -1, projection),
-    Error,
+  expect(() => geoToBlenderPoint(-1, -1, projection)).toThrow(
     "could not project coordinate [-1, -1]",
   );
 });
+
+function geometryDomain(geojson: GeoJsonObject): GeoJsonGeometry {
+  if (geojson.type === "FeatureCollection") {
+    return {
+      type: "GeometryCollection",
+      geometries: geojson.features.flatMap(({ geometry }) => (geometry ? [geometry] : [])),
+    };
+  }
+  if (geojson.type === "Feature") {
+    return { type: "GeometryCollection", geometries: geojson.geometry ? [geojson.geometry] : [] };
+  }
+  return geojson;
+}

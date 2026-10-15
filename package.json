@@ -1,6 +1,6 @@
 {
   "name": "@nshiab/journalism-geo",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "Useful TypeScript functions for journalism projects. This library focuses on wrangling geospatial data.",
   "homepage": "https://nshiab.github.io/journalism-geo/",
   "license": "MIT",

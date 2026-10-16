@@ -1,4 +1,4 @@
-**Journalism Geo v1.0.26**
+**Journalism Geo v1.0.27**
 
 ***
 

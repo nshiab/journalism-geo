@@ -1,8 +1,8 @@
-[**Journalism Geo v1.0.27**](index.md)
+[**Journalism Geo v1.0.28**](index.md)
 
 ***
 
-# Journalism Geo v1.0.27
+# Journalism Geo v1.0.28
 
 ## Geo
 

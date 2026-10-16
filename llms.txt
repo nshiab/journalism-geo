@@ -1,15 +1,15 @@
-# Journalism Geo v1.0.27
+# Journalism Geo v1.0.28
 
 > Useful TypeScript functions for journalism projects. This library focuses on wrangling geospatial data.
 
-- [README](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/README.md): Installation, examples and usage.
+- [README](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/README.md): Installation, examples and usage.
 
 ## API
-- [distance](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/distance.md): distance function
-- [geoTo3D](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/geoTo3D.md): geoTo3D function
-- [geoToBlender](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/geoToBlender.md): geoToBlender function
-- [geoToBlenderPoint](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/geoToBlenderPoint.md): geoToBlenderPoint function
-- [getClosest](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/getClosest.md): getClosest function
-- [getGeoTiffDetails](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/getGeoTiffDetails.md): getGeoTiffDetails function
-- [getGeoTiffValues](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/getGeoTiffValues.md): getGeoTiffValues function
-- [styledLayerDescriptor](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.27/docs/functions/styledLayerDescriptor.md): styledLayerDescriptor function
+- [distance](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/distance.md): distance function
+- [geoTo3D](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/geoTo3D.md): geoTo3D function
+- [geoToBlender](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/geoToBlender.md): geoToBlender function
+- [geoToBlenderPoint](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/geoToBlenderPoint.md): geoToBlenderPoint function
+- [getClosest](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/getClosest.md): getClosest function
+- [getGeoTiffDetails](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/getGeoTiffDetails.md): getGeoTiffDetails function
+- [getGeoTiffValues](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/getGeoTiffValues.md): getGeoTiffValues function
+- [styledLayerDescriptor](https://raw.githubusercontent.com/nshiab/journalism-geo/v1.0.28/docs/functions/styledLayerDescriptor.md): styledLayerDescriptor function

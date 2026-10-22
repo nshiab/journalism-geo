@@ -1,4 +1,4 @@
-[**Journalism Geo v1.0.28**](../index.md)
+[**Journalism Geo v1.0.29**](../index.md)
 
 ***
 
@@ -10,7 +10,7 @@
 
 > **getClosest**\<`T`\>(`lon`, `lat`, `geoItems`, `getItemLon`, `getItemLat`, `options?`): `T`
 
-Defined in: [getClosest.ts:88](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getClosest.ts#L88)
+Defined in: [getClosest.ts:88](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getClosest.ts#L88)
 
 Finds the geographical item closest to a given reference point (longitude and latitude) from a list of geographical items.
 
@@ -130,7 +130,7 @@ console.log(closestPark);
 
 > **getClosest**\<`T`\>(`lon`, `lat`, `geoItems`, `getItemLon`, `getItemLat`, `options`): `T` & `object`
 
-Defined in: [getClosest.ts:111](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getClosest.ts#L111)
+Defined in: [getClosest.ts:111](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getClosest.ts#L111)
 
 Finds the geographical item closest to a given reference point and adds distance to the properties object.
 
@@ -194,7 +194,7 @@ The closest item with distance added to its properties object.
 
 > **getClosest**\<`T`\>(`lon`, `lat`, `geoItems`, `getItemLon`, `getItemLat`, `options`): `T` & `object`
 
-Defined in: [getClosest.ts:134](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getClosest.ts#L134)
+Defined in: [getClosest.ts:134](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getClosest.ts#L134)
 
 Finds the geographical item closest to a given reference point and adds distance directly to the item.
 

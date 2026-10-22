@@ -1,4 +1,4 @@
-[**Journalism Geo v1.0.28**](../index.md)
+[**Journalism Geo v1.0.29**](../index.md)
 
 ***
 
@@ -71,7 +71,7 @@ console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 l
 
 > **geoTo3D**(`lon`, `lat`, `radius`, `options`): \[`number`, `number`, `number`\]
 
-Defined in: [geoTo3D.ts:36](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoTo3D.ts#L36)
+Defined in: [geoTo3D.ts:36](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoTo3D.ts#L36)
 
 Converts geographical coordinates (longitude and latitude) into 3D Cartesian (x, y, z) coordinates based on a specified radius.
 
@@ -144,7 +144,7 @@ console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 l
 
 > **geoTo3D**(`lon`, `lat`, `radius`, `options?`): `object`
 
-Defined in: [geoTo3D.ts:81](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoTo3D.ts#L81)
+Defined in: [geoTo3D.ts:81](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoTo3D.ts#L81)
 
 Converts geographical coordinates (longitude and latitude) into 3D Cartesian (x, y, z) coordinates based on a specified radius.
 

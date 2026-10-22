@@ -1,4 +1,4 @@
-**Journalism Geo v1.0.28**
+**Journalism Geo v1.0.29**
 
 ***
 
@@ -66,7 +66,7 @@ for development commands.
 
 > **distance**(`lon1`, `lat1`, `lon2`, `lat2`, `options?`): `number`
 
-Defined in: [distance.ts:33](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/distance.ts#L33)
+Defined in: [distance.ts:33](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/distance.ts#L33)
 
 Calculates the Haversine distance between two geographical points (longitude and latitude) in kilometers. The Haversine formula is used to determine the great-circle distance between two points on a sphere given their longitudes and latitudes.
 
@@ -198,7 +198,7 @@ console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 l
 
 > **geoTo3D**(`lon`, `lat`, `radius`, `options`): \[`number`, `number`, `number`\]
 
-Defined in: [geoTo3D.ts:36](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoTo3D.ts#L36)
+Defined in: [geoTo3D.ts:36](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoTo3D.ts#L36)
 
 Converts geographical coordinates (longitude and latitude) into 3D Cartesian (x, y, z) coordinates based on a specified radius.
 
@@ -271,7 +271,7 @@ console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 l
 
 > **geoTo3D**(`lon`, `lat`, `radius`, `options?`): `object`
 
-Defined in: [geoTo3D.ts:81](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoTo3D.ts#L81)
+Defined in: [geoTo3D.ts:81](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoTo3D.ts#L81)
 
 Converts geographical coordinates (longitude and latitude) into 3D Cartesian (x, y, z) coordinates based on a specified radius.
 
@@ -358,7 +358,7 @@ console.log(earthCoords); // Expected output: { x: 0, y: 6371, z: 0 } (for 0,0 l
 
 > **geoToBlender**(`geojsonPath`, `projection`, `outputPath`, `options?`): `Promise`\<`string`\>
 
-Defined in: [geoToBlender.ts:138](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoToBlender.ts#L138)
+Defined in: [geoToBlender.ts:138](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoToBlender.ts#L138)
 
 Converts GeoJSON borders into an OBJ file that can be imported in Blender.
 
@@ -453,7 +453,7 @@ await geoToBlender(geojsonPath, projection, "./output/canada.obj", {
 
 > **geoToBlenderPoint**(`lon`, `lat`, `projection`, `options?`): `object`
 
-Defined in: [geoToBlenderPoint.ts:37](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoToBlenderPoint.ts#L37)
+Defined in: [geoToBlenderPoint.ts:37](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoToBlenderPoint.ts#L37)
 
 Converts one longitude/latitude coordinate into Blender coordinates.
 
@@ -557,7 +557,7 @@ const point = geoToBlenderPoint(-73.5674, 45.5019, projection, {
 
 > **geoToBlenderPoint**(`lon`, `lat`, `projection`, `options`): \[`number`, `number`, `number`\]
 
-Defined in: [geoToBlenderPoint.ts:83](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoToBlenderPoint.ts#L83)
+Defined in: [geoToBlenderPoint.ts:83](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoToBlenderPoint.ts#L83)
 
 Converts one longitude/latitude coordinate into Blender coordinates.
 
@@ -644,7 +644,7 @@ const point = geoToBlenderPoint(-73.5674, 45.5019, "orthographic", {
 
 > **getClosest**\<`T`\>(`lon`, `lat`, `geoItems`, `getItemLon`, `getItemLat`, `options?`): `T`
 
-Defined in: [getClosest.ts:88](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getClosest.ts#L88)
+Defined in: [getClosest.ts:88](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getClosest.ts#L88)
 
 Finds the geographical item closest to a given reference point (longitude and latitude) from a list of geographical items.
 
@@ -764,7 +764,7 @@ console.log(closestPark);
 
 > **getClosest**\<`T`\>(`lon`, `lat`, `geoItems`, `getItemLon`, `getItemLat`, `options`): `T` & `object`
 
-Defined in: [getClosest.ts:111](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getClosest.ts#L111)
+Defined in: [getClosest.ts:111](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getClosest.ts#L111)
 
 Finds the geographical item closest to a given reference point and adds distance to the properties object.
 
@@ -828,7 +828,7 @@ The closest item with distance added to its properties object.
 
 > **getClosest**\<`T`\>(`lon`, `lat`, `geoItems`, `getItemLon`, `getItemLat`, `options`): `T` & `object`
 
-Defined in: [getClosest.ts:134](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getClosest.ts#L134)
+Defined in: [getClosest.ts:134](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getClosest.ts#L134)
 
 Finds the geographical item closest to a given reference point and adds distance directly to the item.
 
@@ -894,7 +894,7 @@ The closest item with distance added directly to the item.
 
 > **getGeoTiffDetails**(`path`): `Promise`\<\{ `bbox`: `number`[]; `bboxHeight`: `number`; `bboxWidth`: `number`; `image`: `GeoTIFFImage`; `pixelHeight`: `number`; `pixelWidth`: `number`; \}\>
 
-Defined in: [getGeoTiffDetails.ts:25](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getGeoTiffDetails.ts#L25)
+Defined in: [getGeoTiffDetails.ts:25](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getGeoTiffDetails.ts#L25)
 
 Extracts detailed information from a GeoTIFF file, which can then be used with the `getGeoTiffValues` function.
 
@@ -934,7 +934,7 @@ console.log(value) // 255
 
 > **getGeoTiffValues**(`lat`, `lon`, `geoTiffDetails`): `Promise`\<`Uint8Array`\<`ArrayBufferLike`\> \| `Uint16Array`\<`ArrayBufferLike`\> \| `Uint32Array`\<`ArrayBufferLike`\> \| `Int8Array`\<`ArrayBufferLike`\> \| `Int16Array`\<`ArrayBufferLike`\> \| `Int32Array`\<`ArrayBufferLike`\> \| `Float32Array`\<`ArrayBufferLike`\> \| `Float64Array`\<`ArrayBufferLike`\>\>
 
-Defined in: [getGeoTiffValues.ts:31](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getGeoTiffValues.ts#L31)
+Defined in: [getGeoTiffValues.ts:31](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getGeoTiffValues.ts#L31)
 
 Extracts values at specific latitude and longitude coordinates from a GeoTIFF image. This function works in conjunction with the `getGeoTiffDetails` function, using the details returned by it.
 
@@ -1006,7 +1006,7 @@ If the coordinates are outside the GeoTIFF's bounding box or if there's an issue
 
 > **styledLayerDescriptor**(`layer`, `colorScale`): `string`
 
-Defined in: [styledLayerDescriptor.ts:33](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/styledLayerDescriptor.ts#L33)
+Defined in: [styledLayerDescriptor.ts:33](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/styledLayerDescriptor.ts#L33)
 
 Generates an OpenGIS Styled Layer Descriptor (SLD) XML string, encoded for use in a URL. This function is particularly useful for dynamically styling Web Map Service (WMS) layers, allowing for custom color scales and visual representations of geospatial data directly through the WMS request.
 

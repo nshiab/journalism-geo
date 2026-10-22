@@ -1,4 +1,4 @@
-[**Journalism Geo v1.0.28**](../index.md)
+[**Journalism Geo v1.0.29**](../index.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **getGeoTiffDetails**(`path`): `Promise`\<\{ `bbox`: `number`[]; `bboxHeight`: `number`; `bboxWidth`: `number`; `image`: `GeoTIFFImage`; `pixelHeight`: `number`; `pixelWidth`: `number`; \}\>
 
-Defined in: [getGeoTiffDetails.ts:25](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/getGeoTiffDetails.ts#L25)
+Defined in: [getGeoTiffDetails.ts:25](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/getGeoTiffDetails.ts#L25)
 
 Extracts detailed information from a GeoTIFF file, which can then be used with the `getGeoTiffValues` function.
 

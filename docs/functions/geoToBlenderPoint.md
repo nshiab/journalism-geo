@@ -1,4 +1,4 @@
-[**Journalism Geo v1.0.28**](../index.md)
+[**Journalism Geo v1.0.29**](../index.md)
 
 ***
 
@@ -10,7 +10,7 @@
 
 > **geoToBlenderPoint**(`lon`, `lat`, `projection`, `options?`): `object`
 
-Defined in: [geoToBlenderPoint.ts:37](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoToBlenderPoint.ts#L37)
+Defined in: [geoToBlenderPoint.ts:37](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoToBlenderPoint.ts#L37)
 
 Converts one longitude/latitude coordinate into Blender coordinates.
 
@@ -114,7 +114,7 @@ const point = geoToBlenderPoint(-73.5674, 45.5019, projection, {
 
 > **geoToBlenderPoint**(`lon`, `lat`, `projection`, `options`): \[`number`, `number`, `number`\]
 
-Defined in: [geoToBlenderPoint.ts:83](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoToBlenderPoint.ts#L83)
+Defined in: [geoToBlenderPoint.ts:83](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoToBlenderPoint.ts#L83)
 
 Converts one longitude/latitude coordinate into Blender coordinates.
 

@@ -1,4 +1,4 @@
-[**Journalism Geo v1.0.28**](../index.md)
+[**Journalism Geo v1.0.29**](../index.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **styledLayerDescriptor**(`layer`, `colorScale`): `string`
 
-Defined in: [styledLayerDescriptor.ts:33](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/styledLayerDescriptor.ts#L33)
+Defined in: [styledLayerDescriptor.ts:33](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/styledLayerDescriptor.ts#L33)
 
 Generates an OpenGIS Styled Layer Descriptor (SLD) XML string, encoded for use in a URL. This function is particularly useful for dynamically styling Web Map Service (WMS) layers, allowing for custom color scales and visual representations of geospatial data directly through the WMS request.
 

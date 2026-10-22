@@ -1,4 +1,4 @@
-[**Journalism Geo v1.0.28**](../index.md)
+[**Journalism Geo v1.0.29**](../index.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **geoToBlender**(`geojsonPath`, `projection`, `outputPath`, `options?`): `Promise`\<`string`\>
 
-Defined in: [geoToBlender.ts:138](https://github.com/nshiab/journalism-geo/blob/v1.0.28/src/geo/geoToBlender.ts#L138)
+Defined in: [geoToBlender.ts:138](https://github.com/nshiab/journalism-geo/blob/v1.0.29/src/geo/geoToBlender.ts#L138)
 
 Converts GeoJSON borders into an OBJ file that can be imported in Blender.
 
